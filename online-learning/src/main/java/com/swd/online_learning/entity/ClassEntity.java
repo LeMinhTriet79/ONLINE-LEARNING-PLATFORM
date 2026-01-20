@@ -1,5 +1,6 @@
 package com.swd.online_learning.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -23,5 +24,7 @@ public class ClassEntity {
 
     // Quan hệ 1 Lớp có nhiều Học sinh
     @OneToMany(mappedBy = "myClass", fetch = FetchType.LAZY)
+    @JsonIgnore
+    @ToString.Exclude
     private List<User> students;
 }
