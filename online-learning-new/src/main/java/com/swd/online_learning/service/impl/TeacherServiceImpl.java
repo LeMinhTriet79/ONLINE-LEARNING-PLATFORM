@@ -70,6 +70,7 @@ public class TeacherServiceImpl implements TeacherService {
                 .title(request.getTitle())
                 .contentText(request.getContentText())
                 .videoUrl(request.getVideoUrl())
+                .attachmentUrl(request.getAttachmentUrl())
                 .orderIndex(request.getOrderIndex())
                 .chapter(chapter)
                 .build();
@@ -121,6 +122,7 @@ public class TeacherServiceImpl implements TeacherService {
         Assignment assignment = Assignment.builder()
                 .title(request.getTitle())
                 .instructions(request.getInstructions())
+                .attachmentUrl(request.getAttachmentUrl())
                 .lesson(lesson)
                 .build();
 
@@ -172,5 +174,83 @@ public class TeacherServiceImpl implements TeacherService {
 
         enrollment.setProgressPercent(progress);
         enrollmentRepository.save(enrollment);
+    }
+
+    @Override
+    @Transactional
+    public Lesson updateLesson(Long lessonId, LessonRequest request) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+
+        // Cập nhật thông tin mới
+        lesson.setTitle(request.getTitle());
+        lesson.setVideoUrl(request.getVideoUrl());
+        lesson.setContentText(request.getContentText());
+        lesson.setAttachmentUrl(request.getAttachmentUrl());
+
+        return lessonRepository.save(lesson);
+    }
+
+    @Override
+    public Lesson getLessonDetail(Long lessonId) {
+        return lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+    }
+
+    @Override
+    @Transactional
+    public Quiz updateQuiz(Long quizId, QuizRequest request) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Quiz not found"));
+
+        quiz.setTitle(request.getTitle());
+
+        // XÓA HẾT CŨ - THÊM MỚI (Cách an toàn nhất để tránh lỗi trùng lặp)
+        // Nhờ orphanRemoval = true ở Entity, lệnh clear() này sẽ xóa bay dữ liệu cũ trong DB
+        quiz.getQuestions().clear();
+
+        // Convert Request -> Entity
+        List<Question> newQuestions = request.getQuestions().stream().map(qReq -> {
+            Question question = Question.builder()
+                    .content(qReq.getContent())
+                    .quiz(quiz) // Gán ngược lại quiz cho question
+                    .build();
+
+            List<QuizOption> options = qReq.getOptions().stream().map(oReq ->
+                    QuizOption.builder()
+                            .content(oReq.getContent())
+                            .isCorrect(oReq.isCorrect())
+                            .question(question) // Gán ngược lại question cho option
+                            .build()
+            ).collect(Collectors.toList());
+
+            question.setOptions(options);
+            return question;
+        }).collect(Collectors.toList());
+
+        // Thêm danh sách mới vào
+        quiz.getQuestions().addAll(newQuestions);
+
+        return quizRepository.save(quiz);
+    }
+
+    @Override
+    public void deleteQuiz(Long quizId) {
+        quizRepository.deleteById(quizId);
+    }
+
+    @Override
+    @Transactional
+    public Assignment updateAssignment(Long assignmentId, AssignmentRequest request) {
+        Assignment assignment = assignmentRepository.findById(assignmentId).orElseThrow(() -> new RuntimeException("Assignment not found"));
+        assignment.setTitle(request.getTitle());
+        assignment.setInstructions(request.getInstructions());
+        assignment.setAttachmentUrl(request.getAttachmentUrl());
+        return assignmentRepository.save(assignment);
+    }
+
+    @Override
+    public void deleteAssignment(Long assignmentId) {
+        assignmentRepository.deleteById(assignmentId);
     }
 }

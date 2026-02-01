@@ -27,6 +27,8 @@ public class Lesson {
 
     private String videoUrl;
 
+    private String attachmentUrl;
+
     private Integer orderIndex;
     @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL)
     private List<Quiz> quizzes;

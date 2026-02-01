@@ -7,5 +7,6 @@ public class LessonRequest {
     private String title;
     private String contentText; // Nội dung lý thuyết hoặc link PDF
     private String videoUrl;
+    private String attachmentUrl;
     private Integer orderIndex;
 }

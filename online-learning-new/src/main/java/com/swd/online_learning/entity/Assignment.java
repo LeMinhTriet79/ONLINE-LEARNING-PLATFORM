@@ -21,4 +21,6 @@ public class Assignment {
 
     @Column(columnDefinition = "TEXT")
     private String instructions;
+
+    private String attachmentUrl;
 }
