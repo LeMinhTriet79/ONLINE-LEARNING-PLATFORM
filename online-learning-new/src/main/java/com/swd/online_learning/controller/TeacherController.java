@@ -70,4 +70,38 @@ public class TeacherController {
             @RequestBody AssignmentRequest request) { // Đổi thành Request
         return ResponseEntity.ok(ApiResponse.success(teacherService.createAssignment(lessonId, request), "Assignment created"));
     }
+
+    @PutMapping("/lessons/{lessonId}")
+    public ResponseEntity<ApiResponse<Lesson>> updateLesson(
+            @PathVariable Long lessonId,
+            @RequestBody LessonRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.updateLesson(lessonId, request), "Lesson updated"));
+    }
+
+    @GetMapping("/lessons/{lessonId}")
+    public ResponseEntity<ApiResponse<Lesson>> getLessonDetail(@PathVariable Long lessonId) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.getLessonDetail(lessonId), "Fetched lesson details"));
+    }
+
+    @PutMapping("/quizzes/{quizId}")
+    public ResponseEntity<ApiResponse<Quiz>> updateQuiz(@PathVariable Long quizId, @RequestBody QuizRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.updateQuiz(quizId, request), "Quiz updated"));
+    }
+
+    @DeleteMapping("/quizzes/{quizId}")
+    public ResponseEntity<ApiResponse<Void>> deleteQuiz(@PathVariable Long quizId) {
+        teacherService.deleteQuiz(quizId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Quiz deleted"));
+    }
+
+    @PutMapping("/assignments/{assignmentId}")
+    public ResponseEntity<ApiResponse<Assignment>> updateAssignment(@PathVariable Long assignmentId, @RequestBody AssignmentRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.updateAssignment(assignmentId, request), "Assignment updated"));
+    }
+
+    @DeleteMapping("/assignments/{assignmentId}")
+    public ResponseEntity<ApiResponse<Void>> deleteAssignment(@PathVariable Long assignmentId) {
+        teacherService.deleteAssignment(assignmentId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Assignment deleted"));
+    }
 }
