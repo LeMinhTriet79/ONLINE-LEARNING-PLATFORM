@@ -1,7 +1,8 @@
 package com.swd.online_learning.service;
 
 import com.swd.online_learning.dto.AuthResponse;
-import com.swd.online_learning.dto.LoginDto;
+
+import com.swd.online_learning.dto.request.LoginDto;
 import com.swd.online_learning.entity.User;
 import com.swd.online_learning.repository.UserRepository;
 import com.swd.online_learning.security.JwtUtilities;

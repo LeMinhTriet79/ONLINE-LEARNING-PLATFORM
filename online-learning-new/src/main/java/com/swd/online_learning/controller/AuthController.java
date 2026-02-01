@@ -2,7 +2,8 @@ package com.swd.online_learning.controller;
 
 import com.swd.online_learning.dto.ApiResponse;
 import com.swd.online_learning.dto.AuthResponse;
-import com.swd.online_learning.dto.LoginDto;
+
+import com.swd.online_learning.dto.request.LoginDto;
 import com.swd.online_learning.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
