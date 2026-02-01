@@ -1,5 +1,6 @@
 package com.swd.online_learning.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,6 +12,7 @@ public class QuizOption {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long optionId;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;

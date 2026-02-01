@@ -13,7 +13,7 @@ public class Enrollment {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private AppUser student;
+    private User student;
 
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
