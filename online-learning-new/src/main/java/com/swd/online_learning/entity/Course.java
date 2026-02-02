@@ -1,5 +1,6 @@
 package com.swd.online_learning.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -18,10 +19,14 @@ public class Course {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    private String imageUrl;
+
     @ManyToOne
     @JoinColumn(name = "instructor_id", nullable = false)
     private User instructor;
 
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    // QUAN TRỌNG: cascade = ALL để xóa Course là xóa hết Chapter con
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("course") // Cắt vòng lặp: Lấy Course -> Lấy Chapter -> NGỪNG (Không lấy ngược lại Course nữa)
     private List<Chapter> chapters;
 }

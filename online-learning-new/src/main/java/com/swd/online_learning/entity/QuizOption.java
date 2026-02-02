@@ -1,6 +1,7 @@
 package com.swd.online_learning.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,5 +21,6 @@ public class QuizOption {
     @Column(nullable = false)
     private String content;
 
+    @JsonProperty("isCorrect")
     private boolean isCorrect;
 }

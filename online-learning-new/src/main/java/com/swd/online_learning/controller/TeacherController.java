@@ -16,92 +16,90 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/teacher")
 @RequiredArgsConstructor
-// Chỉ cho phép TEACHER truy cập toàn bộ Controller này
 @PreAuthorize("hasRole('TEACHER')")
 public class TeacherController {
 
     private final TeacherService teacherService;
 
-    // 1. Tạo khóa học mới
+    // --- COURSE ---
     @PostMapping("/courses")
-    public ResponseEntity<ApiResponse<Course>> createCourse(
-            @RequestBody CourseRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) { // Lấy user đang đăng nhập
-
-        Course newCourse = teacherService.createCourse(request, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.success(newCourse, "Course created successfully"));
+    public ResponseEntity<ApiResponse<Course>> createCourse(@RequestBody CourseRequest request, @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.createCourse(request, userDetails.getUsername()), "Created"));
     }
-
-    // 2. Lấy danh sách khóa học của tôi
     @GetMapping("/my-courses")
-    public ResponseEntity<ApiResponse<List<Course>>> getMyCourses(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(ApiResponse.success(teacherService.getMyCourses(userDetails.getUsername()), "Fetched courses"));
+    public ResponseEntity<ApiResponse<List<Course>>> getMyCourses(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.getMyCourses(userDetails.getUsername()), "Fetched"));
+    }
+    @PutMapping("/courses/{courseId}")
+    public ResponseEntity<ApiResponse<Course>> updateCourse(@PathVariable Long courseId, @RequestBody CourseRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.updateCourse(courseId, request), "Updated"));
+    }
+    @DeleteMapping("/courses/{courseId}")
+    public ResponseEntity<ApiResponse<Void>> deleteCourse(@PathVariable Long courseId) {
+        teacherService.deleteCourse(courseId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Deleted"));
     }
 
-    // 3. Tạo chương (Chapter) vào khóa học
+    // --- CHAPTER ---
     @PostMapping("/courses/{courseId}/chapters")
-    public ResponseEntity<ApiResponse<Chapter>> createChapter(
-            @PathVariable Long courseId,
-            @RequestBody ChapterRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(teacherService.createChapter(courseId, request), "Chapter created"));
+    public ResponseEntity<ApiResponse<Chapter>> createChapter(@PathVariable Long courseId, @RequestBody ChapterRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.createChapter(courseId, request), "Created"));
+    }
+    @PutMapping("/chapters/{chapterId}")
+    public ResponseEntity<ApiResponse<Chapter>> updateChapter(@PathVariable Long chapterId, @RequestBody ChapterRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.updateChapter(chapterId, request), "Updated"));
+    }
+    @DeleteMapping("/chapters/{chapterId}")
+    public ResponseEntity<ApiResponse<Void>> deleteChapter(@PathVariable Long chapterId) {
+        teacherService.deleteChapter(chapterId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Deleted"));
     }
 
-    // 4. Tạo bài học (Lesson) vào chương
+    // --- LESSON ---
     @PostMapping("/chapters/{chapterId}/lessons")
-    public ResponseEntity<ApiResponse<Lesson>> createLesson(
-            @PathVariable Long chapterId,
-            @RequestBody LessonRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(teacherService.createLesson(chapterId, request), "Lesson created"));
+    public ResponseEntity<ApiResponse<Lesson>> createLesson(@PathVariable Long chapterId, @RequestBody LessonRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.createLesson(chapterId, request), "Created"));
     }
-
-    // 5. Tạo Quiz cho bài học
-    @PostMapping("/lessons/{lessonId}/quizzes")
-    public ResponseEntity<ApiResponse<Quiz>> createQuiz(
-            @PathVariable Long lessonId,
-            @RequestBody QuizRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(teacherService.createQuiz(lessonId, request), "Quiz created"));
-    }
-
-    // 6. Tạo Assignment cho bài học
-    @PostMapping("/lessons/{lessonId}/assignments")
-    public ResponseEntity<ApiResponse<Assignment>> createAssignment(
-            @PathVariable Long lessonId,
-            @RequestBody AssignmentRequest request) { // Đổi thành Request
-        return ResponseEntity.ok(ApiResponse.success(teacherService.createAssignment(lessonId, request), "Assignment created"));
-    }
-
-    @PutMapping("/lessons/{lessonId}")
-    public ResponseEntity<ApiResponse<Lesson>> updateLesson(
-            @PathVariable Long lessonId,
-            @RequestBody LessonRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(teacherService.updateLesson(lessonId, request), "Lesson updated"));
-    }
-
     @GetMapping("/lessons/{lessonId}")
     public ResponseEntity<ApiResponse<Lesson>> getLessonDetail(@PathVariable Long lessonId) {
-        return ResponseEntity.ok(ApiResponse.success(teacherService.getLessonDetail(lessonId), "Fetched lesson details"));
+        return ResponseEntity.ok(ApiResponse.success(teacherService.getLessonDetail(lessonId), "Fetched"));
+    }
+    @PutMapping("/lessons/{lessonId}")
+    public ResponseEntity<ApiResponse<Lesson>> updateLesson(@PathVariable Long lessonId, @RequestBody LessonRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.updateLesson(lessonId, request), "Updated"));
+    }
+    @DeleteMapping("/lessons/{lessonId}")
+    public ResponseEntity<ApiResponse<Void>> deleteLesson(@PathVariable Long lessonId) {
+        teacherService.deleteLesson(lessonId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Deleted"));
     }
 
+    // --- QUIZ & ASSIGNMENT (Giữ nguyên các endpoint cũ) ---
+    @PostMapping("/lessons/{lessonId}/quizzes")
+    public ResponseEntity<ApiResponse<Quiz>> createQuiz(@PathVariable Long lessonId, @RequestBody QuizRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.createQuiz(lessonId, request), "Created"));
+    }
     @PutMapping("/quizzes/{quizId}")
     public ResponseEntity<ApiResponse<Quiz>> updateQuiz(@PathVariable Long quizId, @RequestBody QuizRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(teacherService.updateQuiz(quizId, request), "Quiz updated"));
+        return ResponseEntity.ok(ApiResponse.success(teacherService.updateQuiz(quizId, request), "Updated"));
     }
-
     @DeleteMapping("/quizzes/{quizId}")
     public ResponseEntity<ApiResponse<Void>> deleteQuiz(@PathVariable Long quizId) {
         teacherService.deleteQuiz(quizId);
-        return ResponseEntity.ok(ApiResponse.success(null, "Quiz deleted"));
+        return ResponseEntity.ok(ApiResponse.success(null, "Deleted"));
     }
 
+    @PostMapping("/lessons/{lessonId}/assignments")
+    public ResponseEntity<ApiResponse<Assignment>> createAssignment(@PathVariable Long lessonId, @RequestBody AssignmentRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.createAssignment(lessonId, request), "Created"));
+    }
     @PutMapping("/assignments/{assignmentId}")
     public ResponseEntity<ApiResponse<Assignment>> updateAssignment(@PathVariable Long assignmentId, @RequestBody AssignmentRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(teacherService.updateAssignment(assignmentId, request), "Assignment updated"));
+        return ResponseEntity.ok(ApiResponse.success(teacherService.updateAssignment(assignmentId, request), "Updated"));
     }
-
     @DeleteMapping("/assignments/{assignmentId}")
     public ResponseEntity<ApiResponse<Void>> deleteAssignment(@PathVariable Long assignmentId) {
         teacherService.deleteAssignment(assignmentId);
-        return ResponseEntity.ok(ApiResponse.success(null, "Assignment deleted"));
+        return ResponseEntity.ok(ApiResponse.success(null, "Deleted"));
     }
 }

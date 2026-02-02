@@ -1,5 +1,6 @@
 package com.swd.online_learning.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.util.List;
 
@@ -17,6 +18,7 @@ public class QuizRequest {
     @Data
     public static class OptionRequest {
         private String content;
+        @JsonProperty("isCorrect")
         private boolean isCorrect;
     }
 }

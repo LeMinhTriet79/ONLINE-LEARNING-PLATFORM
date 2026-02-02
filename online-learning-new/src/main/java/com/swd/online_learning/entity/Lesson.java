@@ -1,6 +1,7 @@
 package com.swd.online_learning.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,9 +15,9 @@ public class Lesson {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long lessonId;
 
-    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "chapter_id", nullable = false)
+    @JsonIgnoreProperties("lessons") // Lấy thông tin Chapter cha để quay lại trang trước, nhưng cắt list con
     private Chapter chapter;
 
     @Column(nullable = false)

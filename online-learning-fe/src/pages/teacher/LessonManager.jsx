@@ -45,8 +45,6 @@ const LessonManager = () => {
     const getOptionLabel = (index) => String.fromCharCode(65 + index); 
 
     // --- API CALLS ---
-    
-    // 1. Fetch ban đầu (Load hết sạch sành sanh)
     const fetchLessonInitial = async () => {
         try {
             const res = await axiosClient.get(`/teacher/lessons/${lessonId}`); 
@@ -54,16 +52,15 @@ const LessonManager = () => {
         } catch (error) { toast.error("Lỗi tải bài học"); } finally { setLoading(false); }
     };
 
-    // 2. Fetch thông minh (Chỉ update danh sách Quiz/Assign, GIỮ NGUYÊN Video/PDF đang nhập dở)
     const reloadListsOnly = async () => {
         try {
             const res = await axiosClient.get(`/teacher/lessons/${lessonId}`);
             if (res.data.status) {
                 const freshData = res.data.data;
                 setLesson(prev => ({
-                    ...prev, // Giữ nguyên title, videoUrl, attachmentUrl cũ (đang nhập dở)
-                    quizzes: freshData.quizzes,       // Chỉ cập nhật list mới
-                    assignments: freshData.assignments // Chỉ cập nhật list mới
+                    ...prev, 
+                    quizzes: freshData.quizzes,
+                    assignments: freshData.assignments 
                 }));
             }
         } catch (error) { console.error("Lỗi reload list"); }
@@ -85,6 +82,19 @@ const LessonManager = () => {
         const courseId = lesson?.chapter?.course?.courseId;
         if (courseId) navigate(`/teacher/courses/${courseId}`);
         else navigate('/teacher/courses');
+    };
+
+    // --- XÓA BÀI HỌC (TÍNH NĂNG MỚI) ---
+    const handleDeleteLesson = async () => {
+        if (window.confirm(`Bạn có chắc chắn muốn xóa bài học "${lesson.title}"?\nThao tác này không thể hoàn tác!`)) {
+            try {
+                await axiosClient.delete(`/teacher/lessons/${lessonId}`);
+                toast.success("Đã xóa bài học!");
+                handleGoBack(); // Quay về trang khóa học sau khi xóa
+            } catch (error) {
+                toast.error("Lỗi xóa bài học!");
+            }
+        }
     };
 
     // --- UPLOAD HANDLER ---
@@ -121,7 +131,7 @@ const LessonManager = () => {
         setUploading(false); setUploadProgress(0);
     };
 
-    // --- QUIZ ACTIONS ---
+    // --- QUIZ & ASSIGNMENT ACTIONS (GIỮ NGUYÊN) ---
     const openQuizModal = (quiz = null) => {
         if (quiz) {
             setCurrentQuizId(quiz.quizId);
@@ -152,7 +162,7 @@ const LessonManager = () => {
                 toast.success("Tạo Quiz mới thành công!");
             }
             setShowQuizModal(false); 
-            reloadListsOnly(); // <--- CHỈ RELOAD LIST, KHÔNG RELOAD FORM CHÍNH
+            reloadListsOnly(); 
         } catch (error) { toast.error("Lỗi lưu Quiz"); }
     };
 
@@ -161,11 +171,10 @@ const LessonManager = () => {
         try {
             await axiosClient.delete(`/teacher/quizzes/${id}`);
             toast.success("Đã xóa Quiz"); 
-            reloadListsOnly(); // <--- CHỈ RELOAD LIST
+            reloadListsOnly();
         } catch(e) { toast.error("Lỗi xóa"); }
     };
 
-    // --- ASSIGNMENT ACTIONS ---
     const openAssignModal = (assign = null) => {
         setShowFilePreview(false);
         if (assign) {
@@ -189,7 +198,7 @@ const LessonManager = () => {
                 toast.success("Giao bài tập mới thành công!");
             }
             setShowAssignModal(false); 
-            reloadListsOnly(); // <--- CHỈ RELOAD LIST
+            reloadListsOnly();
         } catch (error) { toast.error("Lỗi lưu bài tập"); }
     };
 
@@ -198,11 +207,10 @@ const LessonManager = () => {
         try {
             await axiosClient.delete(`/teacher/assignments/${id}`);
             toast.success("Đã xóa"); 
-            reloadListsOnly(); // <--- CHỈ RELOAD LIST
+            reloadListsOnly();
         } catch(e) { toast.error("Lỗi xóa"); }
     };
 
-    // Quiz Logic
     const handleAddQuestion = () => setQuestions([...questions, { content: '', options: [{ content: '', isCorrect: true }, { content: '', isCorrect: false }, { content: '', isCorrect: false }, { content: '', isCorrect: false }] }]);
     const handleQChange = (i, v) => { const n = [...questions]; n[i].content = v; setQuestions(n); };
     const handleOChange = (qi, oi, v) => { const n = [...questions]; n[qi].options[oi].content = v; setQuestions(n); };
@@ -218,27 +226,55 @@ const LessonManager = () => {
                     <Button variant="light" className="me-3" onClick={handleGoBack}><ArrowLeft/> Quay lại</Button>
                     <h4 className="m-0 text-primary">Biên tập: {lesson.title}</h4>
                 </div>
-                <Button variant="primary" onClick={handleSaveLessonInfo} disabled={uploading}><Save className="me-2"/> Lưu Nội Dung Chính</Button>
+                <div>
+                    {/* NÚT XÓA BÀI HỌC MỚI */}
+                    <Button variant="outline-danger" className="me-2" onClick={handleDeleteLesson} disabled={uploading}>
+                        <Trash className="me-1"/> Xóa Bài Học
+                    </Button>
+                    <Button variant="primary" onClick={handleSaveLessonInfo} disabled={uploading}>
+                        <Save className="me-2"/> Lưu Nội Dung Chính
+                    </Button>
+                </div>
             </div>
 
             <Row>
-                {/* CỘT TRÁI: NỘI DUNG */}
+                {/* CỘT TRÁI: NỘI DUNG (VIDEO/PDF) */}
                 <Col md={7}>
                     <Card className="shadow-sm mb-4">
                         <Card.Header className="bg-white fw-bold text-danger"><Youtube className="me-2"/> Nội dung & Xem trước</Card.Header>
                         <Card.Body>
-                            <div className="mb-4 bg-dark rounded overflow-hidden position-relative" style={{minHeight: '300px'}}>
+                            
+                            {/* 1. TÊN BÀI HỌC (ĐÃ CHUYỂN LÊN TRÊN CÙNG) */}
+                            <Form.Group className="mb-4">
+                                <Form.Label className="fw-bold">Tên bài học</Form.Label>
+                                <Form.Control 
+                                    size="lg"
+                                    value={lesson.title} 
+                                    onChange={e => setLesson({...lesson, title: e.target.value})} 
+                                    className="fw-bold text-primary" 
+                                    placeholder="Nhập tên bài học..."
+                                />
+                            </Form.Group>
+
+                            {/* 2. KHUNG PREVIEW VIDEO (XUỐNG DƯỚI) */}
+                            <div className="mb-4 bg-dark rounded overflow-hidden position-relative" style={{minHeight: '350px'}}>
                                 {lesson.videoUrl ? (
                                     isYoutubeLink(lesson.videoUrl) ? (
-                                        <iframe src={getYoutubeEmbedUrl(lesson.videoUrl)} className="w-100" style={{height:'400px'}} frameBorder="0" allowFullScreen title="Preview"></iframe>
+                                        <iframe src={getYoutubeEmbedUrl(lesson.videoUrl)} className="w-100" style={{height:'350px'}} frameBorder="0" allowFullScreen title="Preview"></iframe>
                                     ) : (
-                                        <video src={lesson.videoUrl} controls className="w-100" style={{height:'400px', backgroundColor:'black'}} />
+                                        <video src={lesson.videoUrl} controls className="w-100" style={{height:'350px', backgroundColor:'black'}} />
                                     )
-                                ) : (<div className="d-flex align-items-center justify-content-center text-white h-100" style={{height:'300px'}}><p>Chưa có Video.</p></div>)}
+                                ) : (
+                                    <div className="d-flex align-items-center justify-content-center text-white h-100" style={{height:'350px'}}>
+                                        <div className="text-center">
+                                            <Youtube size={40} className="mb-2 opacity-50"/>
+                                            <p className="m-0">Chưa có Video. Hãy tải lên bên dưới.</p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
-                            <Form.Group className="mb-3"><Form.Label className="fw-bold">Tên bài học</Form.Label><Form.Control value={lesson.title} onChange={e => setLesson({...lesson, title: e.target.value})} className="fw-bold fs-5" /></Form.Group>
-
+                            {/* 3. CÁC INPUT UPLOAD */}
                             <Form.Group className="mb-3 p-3 border rounded bg-light">
                                 <Form.Label className="fw-bold">Video Link / Upload</Form.Label>
                                 <InputGroup>
@@ -266,7 +302,7 @@ const LessonManager = () => {
                     </Card>
                 </Col>
 
-                {/* CỘT PHẢI: BÀI TẬP */}
+                {/* CỘT PHẢI: BÀI TẬP (GIỮ NGUYÊN) */}
                 <Col md={5}>
                     <Card className="shadow-sm mb-4 border-success">
                         <Card.Header className="bg-success text-white d-flex justify-content-between align-items-center">
@@ -306,7 +342,7 @@ const LessonManager = () => {
                 </Col>
             </Row>
 
-            {/* --- MODAL QUIZ --- */}
+            {/* MODAL QUIZ & ASSIGNMENT (GIỮ NGUYÊN) */}
             <Modal show={showQuizModal} onHide={() => setShowQuizModal(false)} size="lg" backdrop="static">
                 <Modal.Header closeButton className="bg-success text-white"><Modal.Title>{currentQuizId ? "Sửa Trắc Nghiệm" : "Tạo Trắc Nghiệm"}</Modal.Title></Modal.Header>
                 <Modal.Body style={{maxHeight: '75vh', overflowY: 'auto', backgroundColor: '#f0f2f5'}}>
@@ -341,7 +377,6 @@ const LessonManager = () => {
                 <Modal.Footer><Button variant="secondary" onClick={() => setShowQuizModal(false)}>Hủy</Button><Button variant="success" onClick={handleSaveQuiz}>{currentQuizId ? "Cập Nhật" : "Lưu Mới"}</Button></Modal.Footer>
             </Modal>
 
-            {/* --- MODAL ASSIGNMENT --- */}
             <Modal show={showAssignModal} onHide={() => setShowAssignModal(false)} size="lg">
                 <Modal.Header closeButton className="bg-warning"><Modal.Title>{currentAssignId ? "Sửa Bài Tập" : "Giao Bài Tập"}</Modal.Title></Modal.Header>
                 <Modal.Body>
