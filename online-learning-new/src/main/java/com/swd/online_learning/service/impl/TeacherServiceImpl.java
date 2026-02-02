@@ -26,16 +26,17 @@ public class TeacherServiceImpl implements TeacherService {
     private final SubmissionRepository submissionRepository;
     private final EnrollmentRepository enrollmentRepository;
 
+    // ================= COURSE (KHÓA HỌC) =================
     @Override
     @Transactional
     public Course createCourse(CourseRequest request, String instructorUsername) {
-        // Lấy thông tin giáo viên từ token (username)
         User instructor = userRepository.findByUsername(instructorUsername)
                 .orElseThrow(() -> new RuntimeException("Instructor not found"));
 
         Course course = Course.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
+                .imageUrl(request.getImageUrl()) // <--- LƯU ẢNH
                 .instructor(instructor)
                 .build();
 
@@ -48,24 +49,62 @@ public class TeacherServiceImpl implements TeacherService {
     }
 
     @Override
-    public Chapter createChapter(Long courseId, ChapterRequest request) {
+    @Transactional
+    public Course updateCourse(Long courseId, CourseRequest request) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
 
+        course.setTitle(request.getTitle());
+        course.setDescription(request.getDescription());
+        course.setImageUrl(request.getImageUrl()); // <--- CẬP NHẬT ẢNH
+
+        return courseRepository.save(course);
+    }
+
+    @Override
+    @Transactional
+    public void deleteCourse(Long courseId) {
+        if (!courseRepository.existsById(courseId)) throw new RuntimeException("Course not found");
+        courseRepository.deleteById(courseId); // Xóa Course -> Xóa luôn Chapter -> Lesson (do Cascade)
+    }
+
+    // ================= CHAPTER (CHƯƠNG) =================
+    @Override
+    @Transactional
+    public Chapter createChapter(Long courseId, ChapterRequest request) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
         Chapter chapter = Chapter.builder()
                 .title(request.getTitle())
                 .orderIndex(request.getOrderIndex())
                 .course(course)
                 .build();
-
         return chapterRepository.save(chapter);
     }
 
     @Override
+    @Transactional
+    public Chapter updateChapter(Long chapterId, ChapterRequest request) {
+        Chapter chapter = chapterRepository.findById(chapterId)
+                .orElseThrow(() -> new RuntimeException("Chapter not found"));
+        chapter.setTitle(request.getTitle());
+        chapter.setOrderIndex(request.getOrderIndex());
+        return chapterRepository.save(chapter);
+    }
+
+    @Override
+    @Transactional
+    public void deleteChapter(Long chapterId) {
+        if (!chapterRepository.existsById(chapterId)) throw new RuntimeException("Chapter not found");
+        chapterRepository.deleteById(chapterId);
+    }
+
+    // ================= LESSON (BÀI HỌC) =================
+    @Override
+    @Transactional
     public Lesson createLesson(Long chapterId, LessonRequest request) {
         Chapter chapter = chapterRepository.findById(chapterId)
                 .orElseThrow(() -> new RuntimeException("Chapter not found"));
-
         Lesson lesson = Lesson.builder()
                 .title(request.getTitle())
                 .contentText(request.getContentText())
@@ -74,59 +113,108 @@ public class TeacherServiceImpl implements TeacherService {
                 .orderIndex(request.getOrderIndex())
                 .chapter(chapter)
                 .build();
+        return lessonRepository.save(lesson);
+    }
 
+    @Override
+    public Lesson getLessonDetail(Long lessonId) {
+        return lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+    }
+
+    @Override
+    @Transactional
+    public Lesson updateLesson(Long lessonId, LessonRequest request) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+        lesson.setTitle(request.getTitle());
+        lesson.setVideoUrl(request.getVideoUrl());
+        lesson.setContentText(request.getContentText());
+        lesson.setAttachmentUrl(request.getAttachmentUrl());
+        // Không update orderIndex ở đây nếu không cần thiết
         return lessonRepository.save(lesson);
     }
 
     @Override
     @Transactional
+    public void deleteLesson(Long lessonId) {
+        if (!lessonRepository.existsById(lessonId)) throw new RuntimeException("Lesson not found");
+        lessonRepository.deleteById(lessonId);
+    }
+
+    // ================= QUIZ & ASSIGNMENT (BÀI TẬP) =================
+    @Override
+    @Transactional
     public Quiz createQuiz(Long lessonId, QuizRequest request) {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new RuntimeException("Lesson not found"));
-
-        // Map DTO sang Entity (Logic phức tạp nhất nằm ở đây)
-        Quiz quiz = Quiz.builder()
-                .title(request.getTitle())
-                .lesson(lesson)
-                .build();
+        Quiz quiz = Quiz.builder().title(request.getTitle()).lesson(lesson).build();
 
         List<Question> questions = request.getQuestions().stream().map(qReq -> {
-            Question question = Question.builder()
-                    .content(qReq.getContent())
-                    .quiz(quiz)
-                    .build();
-
+            Question question = Question.builder().content(qReq.getContent()).quiz(quiz).build();
             List<QuizOption> options = qReq.getOptions().stream().map(oReq ->
-                    QuizOption.builder()
-                            .content(oReq.getContent())
-                            .isCorrect(oReq.isCorrect())
-                            .question(question)
-                            .build()
+                    QuizOption.builder().content(oReq.getContent()).isCorrect(oReq.isCorrect()).question(question).build()
             ).collect(Collectors.toList());
-
             question.setOptions(options);
             return question;
         }).collect(Collectors.toList());
 
         quiz.setQuestions(questions);
-
         return quizRepository.save(quiz);
     }
 
     @Override
-    public Assignment createAssignment(Long lessonId, AssignmentRequest request) {
-        Lesson lesson = lessonRepository.findById(lessonId)
-                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+    @Transactional
+    public Quiz updateQuiz(Long quizId, QuizRequest request) {
+        Quiz quiz = quizRepository.findById(quizId).orElseThrow(() -> new RuntimeException("Quiz not found"));
+        quiz.setTitle(request.getTitle());
+        quiz.getQuestions().clear(); // Xóa cũ (Entity phải có orphanRemoval=true)
 
-        // Map từ DTO sang Entity mới tinh -> ID chắc chắn là null -> Hibernate sẽ CREATE
+        List<Question> newQuestions = request.getQuestions().stream().map(qReq -> {
+            Question question = Question.builder().content(qReq.getContent()).quiz(quiz).build();
+            List<QuizOption> options = qReq.getOptions().stream().map(oReq ->
+                    QuizOption.builder().content(oReq.getContent()).isCorrect(oReq.isCorrect()).question(question).build()
+            ).collect(Collectors.toList());
+            question.setOptions(options);
+            return question;
+        }).collect(Collectors.toList());
+
+        quiz.getQuestions().addAll(newQuestions);
+        return quizRepository.save(quiz);
+    }
+
+    @Override
+    @Transactional
+    public void deleteQuiz(Long quizId) {
+        quizRepository.deleteById(quizId);
+    }
+
+    @Override
+    @Transactional
+    public Assignment createAssignment(Long lessonId, AssignmentRequest request) {
+        Lesson lesson = lessonRepository.findById(lessonId).orElseThrow();
         Assignment assignment = Assignment.builder()
                 .title(request.getTitle())
                 .instructions(request.getInstructions())
                 .attachmentUrl(request.getAttachmentUrl())
-                .lesson(lesson)
-                .build();
-
+                .lesson(lesson).build();
         return assignmentRepository.save(assignment);
+    }
+
+    @Override
+    @Transactional
+    public Assignment updateAssignment(Long assignmentId, AssignmentRequest request) {
+        Assignment assignment = assignmentRepository.findById(assignmentId).orElseThrow();
+        assignment.setTitle(request.getTitle());
+        assignment.setInstructions(request.getInstructions());
+        assignment.setAttachmentUrl(request.getAttachmentUrl());
+        return assignmentRepository.save(assignment);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAssignment(Long assignmentId) {
+        assignmentRepository.deleteById(assignmentId);
     }
 
 
@@ -176,81 +264,5 @@ public class TeacherServiceImpl implements TeacherService {
         enrollmentRepository.save(enrollment);
     }
 
-    @Override
-    @Transactional
-    public Lesson updateLesson(Long lessonId, LessonRequest request) {
-        Lesson lesson = lessonRepository.findById(lessonId)
-                .orElseThrow(() -> new RuntimeException("Lesson not found"));
 
-        // Cập nhật thông tin mới
-        lesson.setTitle(request.getTitle());
-        lesson.setVideoUrl(request.getVideoUrl());
-        lesson.setContentText(request.getContentText());
-        lesson.setAttachmentUrl(request.getAttachmentUrl());
-
-        return lessonRepository.save(lesson);
-    }
-
-    @Override
-    public Lesson getLessonDetail(Long lessonId) {
-        return lessonRepository.findById(lessonId)
-                .orElseThrow(() -> new RuntimeException("Lesson not found"));
-    }
-
-    @Override
-    @Transactional
-    public Quiz updateQuiz(Long quizId, QuizRequest request) {
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Quiz not found"));
-
-        quiz.setTitle(request.getTitle());
-
-        // XÓA HẾT CŨ - THÊM MỚI (Cách an toàn nhất để tránh lỗi trùng lặp)
-        // Nhờ orphanRemoval = true ở Entity, lệnh clear() này sẽ xóa bay dữ liệu cũ trong DB
-        quiz.getQuestions().clear();
-
-        // Convert Request -> Entity
-        List<Question> newQuestions = request.getQuestions().stream().map(qReq -> {
-            Question question = Question.builder()
-                    .content(qReq.getContent())
-                    .quiz(quiz) // Gán ngược lại quiz cho question
-                    .build();
-
-            List<QuizOption> options = qReq.getOptions().stream().map(oReq ->
-                    QuizOption.builder()
-                            .content(oReq.getContent())
-                            .isCorrect(oReq.isCorrect())
-                            .question(question) // Gán ngược lại question cho option
-                            .build()
-            ).collect(Collectors.toList());
-
-            question.setOptions(options);
-            return question;
-        }).collect(Collectors.toList());
-
-        // Thêm danh sách mới vào
-        quiz.getQuestions().addAll(newQuestions);
-
-        return quizRepository.save(quiz);
-    }
-
-    @Override
-    public void deleteQuiz(Long quizId) {
-        quizRepository.deleteById(quizId);
-    }
-
-    @Override
-    @Transactional
-    public Assignment updateAssignment(Long assignmentId, AssignmentRequest request) {
-        Assignment assignment = assignmentRepository.findById(assignmentId).orElseThrow(() -> new RuntimeException("Assignment not found"));
-        assignment.setTitle(request.getTitle());
-        assignment.setInstructions(request.getInstructions());
-        assignment.setAttachmentUrl(request.getAttachmentUrl());
-        return assignmentRepository.save(assignment);
-    }
-
-    @Override
-    public void deleteAssignment(Long assignmentId) {
-        assignmentRepository.deleteById(assignmentId);
-    }
 }

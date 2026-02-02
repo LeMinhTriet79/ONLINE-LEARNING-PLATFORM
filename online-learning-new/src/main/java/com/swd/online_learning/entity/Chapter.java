@@ -1,6 +1,7 @@
 package com.swd.online_learning.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -13,7 +14,7 @@ public class Chapter {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long chapterId;
 
-    @JsonIgnore
+    @JsonIgnoreProperties("chapters")
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
@@ -23,6 +24,7 @@ public class Chapter {
 
     private Integer orderIndex;
 
-    @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("chapter") // Cắt vòng lặp chiều xuống
     private List<Lesson> lessons;
 }
