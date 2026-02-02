@@ -1,12 +1,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import LessonManager from './pages/teacher/LessonManager';
-import Login from './pages/Login';
-import TeacherDashboard from './pages/teacher/TeacherDashboard.jsx'; // Trang chúng ta sắp tạo
-import CourseDetail from './pages/teacher/CourseDetail'; // Trang chi tiết (tạo file rỗng trước)
 import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-// Trang học sinh tạm thời
-const StudentDashboard = () => <h1 className="text-center mt-5">Trang Học Sinh (Đang xây dựng)</h1>;
+// PAGES
+import Login from './pages/Login';
+import TeacherDashboard from './pages/teacher/TeacherDashboard';
+import CourseDetail from './pages/teacher/CourseDetail';
+import LessonManager from './pages/teacher/LessonManager';
+import GradingDashboard from './pages/teacher/GradingDashboard';
+
+import StudentDashboard from './pages/student/StudentDashboard';
+import StudentCourseDetail from './pages/student/StudentCourseDetail';
 
 function App() {
   return (
@@ -15,16 +19,18 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
-        
-        {/* --- ROUTE CỦA GIÁO VIÊN --- */}
-        <Route path="/teacher/courses" element={<TeacherDashboard />} />
-        <Route path="/teacher/courses/:courseId" element={<CourseDetail />} /> 
 
-        {/* ROUTE MỚI: QUẢN LÝ CHI TIẾT 1 BÀI HỌC */}
+        {/* TEACHER ROUTES */}
+        <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+        <Route path="/teacher/courses" element={<Navigate to="/teacher/dashboard" />} />
+        <Route path="/teacher/courses/:courseId" element={<CourseDetail />} />
         <Route path="/teacher/lessons/:lessonId" element={<LessonManager />} />
-        
-        {/* --- ROUTE CỦA HỌC SINH --- */}
-        <Route path="/student/my-courses" element={<StudentDashboard />} />
+        <Route path="/teacher/grading" element={<GradingDashboard />} />
+
+        {/* STUDENT ROUTES */}
+        <Route path="/student/dashboard" element={<StudentDashboard />} />
+        <Route path="/student/my-courses" element={<Navigate to="/student/dashboard" />} />
+        <Route path="/student/courses/:courseId" element={<StudentCourseDetail />} />
       </Routes>
     </BrowserRouter>
   );

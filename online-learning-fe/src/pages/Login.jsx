@@ -28,7 +28,7 @@ const Login = () => {
                 if (role === 'TEACHER') {
                     navigate('/teacher/courses'); // Sẽ làm trang này sau
                 } else if (role === 'STUDENT') {
-                    navigate('/student/my-courses'); // Sẽ làm trang này sau
+                    navigate('/student/dashboard'); 
                 } else {
                     navigate('/');
                 }
