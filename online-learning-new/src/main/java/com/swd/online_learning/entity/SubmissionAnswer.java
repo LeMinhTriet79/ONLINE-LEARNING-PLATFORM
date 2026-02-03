@@ -1,5 +1,6 @@
 package com.swd.online_learning.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,6 +13,7 @@ public class SubmissionAnswer {
     private Long id;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "submission_id", nullable = false)
     private Submission submission;
 
@@ -19,7 +21,7 @@ public class SubmissionAnswer {
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "selected_option_id")
     private QuizOption selectedOption;
 }

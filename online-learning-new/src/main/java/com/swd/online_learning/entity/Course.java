@@ -21,6 +21,9 @@ public class Course {
 
     private String imageUrl;
 
+    @Column(unique = true) // Mã này không được trùng nhau giữa các khóa học
+    private String enrollmentKey;
+
     @ManyToOne
     @JoinColumn(name = "instructor_id", nullable = false)
     private User instructor;

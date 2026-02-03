@@ -33,10 +33,16 @@ public class TeacherServiceImpl implements TeacherService {
         User instructor = userRepository.findByUsername(instructorUsername)
                 .orElseThrow(() -> new RuntimeException("Instructor not found"));
 
+        // Kiểm tra trùng Key (nếu cần kỹ)
+        if (request.getEnrollmentKey() != null && courseRepository.findByEnrollmentKey(request.getEnrollmentKey()).isPresent()) {
+            throw new RuntimeException("Mã tham gia này đã tồn tại, vui lòng chọn mã khác!");
+        }
+
         Course course = Course.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
-                .imageUrl(request.getImageUrl()) // <--- LƯU ẢNH
+                .imageUrl(request.getImageUrl())
+                .enrollmentKey(request.getEnrollmentKey()) // <--- LƯU KEY
                 .instructor(instructor)
                 .build();
 
@@ -45,7 +51,7 @@ public class TeacherServiceImpl implements TeacherService {
 
     @Override
     public List<Course> getMyCourses(String instructorUsername) {
-        return courseRepository.findByInstructorUsername(instructorUsername);
+        return courseRepository.findByInstructor_Username(instructorUsername);
     }
 
     @Override
@@ -56,7 +62,15 @@ public class TeacherServiceImpl implements TeacherService {
 
         course.setTitle(request.getTitle());
         course.setDescription(request.getDescription());
-        course.setImageUrl(request.getImageUrl()); // <--- CẬP NHẬT ẢNH
+        course.setImageUrl(request.getImageUrl());
+
+        // Cập nhật key nếu có thay đổi
+        if (request.getEnrollmentKey() != null && !request.getEnrollmentKey().equals(course.getEnrollmentKey())) {
+            if (courseRepository.findByEnrollmentKey(request.getEnrollmentKey()).isPresent()) {
+                throw new RuntimeException("Mã tham gia đã tồn tại!");
+            }
+            course.setEnrollmentKey(request.getEnrollmentKey());
+        }
 
         return courseRepository.save(course);
     }

@@ -3,6 +3,7 @@ package com.swd.online_learning.controller;
 import com.swd.online_learning.dto.ApiResponse;
 import com.swd.online_learning.dto.request.*;
 import com.swd.online_learning.entity.*;
+import com.swd.online_learning.repository.SubmissionRepository;
 import com.swd.online_learning.service.TeacherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ public class TeacherController {
 
     private final TeacherService teacherService;
 
+    private final SubmissionRepository submissionRepository;
     // --- COURSE ---
     @PostMapping("/courses")
     public ResponseEntity<ApiResponse<Course>> createCourse(@RequestBody CourseRequest request, @AuthenticationPrincipal UserDetails userDetails) {
@@ -101,5 +103,23 @@ public class TeacherController {
     public ResponseEntity<ApiResponse<Void>> deleteAssignment(@PathVariable Long assignmentId) {
         teacherService.deleteAssignment(assignmentId);
         return ResponseEntity.ok(ApiResponse.success(null, "Deleted"));
+    }
+
+    // ... code cũ
+
+    // API lấy danh sách bài tập cần chấm điểm
+    @GetMapping("/submissions/pending")
+    public ResponseEntity<ApiResponse<List<Submission>>> getPendingSubmissions(@AuthenticationPrincipal UserDetails userDetails) {
+        // Gọi Repository để tìm các bài status = PENDING của giáo viên này
+        List<Submission> list = submissionRepository.findPendingSubmissionsByInstructor(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(list, "Fetched pending submissions"));
+    }
+
+    // API Chấm điểm (Submit Grade)
+    @PostMapping("/submissions/{submissionId}/grade")
+    public ResponseEntity<ApiResponse<Submission>> gradeSubmission(
+            @PathVariable Long submissionId,
+            @RequestBody GradeAssignmentRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.gradeAssignment(submissionId, request), "Graded"));
     }
 }

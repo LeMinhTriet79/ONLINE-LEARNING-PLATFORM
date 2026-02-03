@@ -28,28 +28,49 @@ public class StudentServiceImpl implements StudentService {
     private final QuestionRepository questionRepository;
     private final QuizOptionRepository quizOptionRepository;
     private final LessonRepository lessonRepository;
+
     @Override
-    public void enrollCourse(Long courseId, String username) {
-        User student = userRepository.findByUsername(username).orElseThrow();
-        Course course = courseRepository.findById(courseId).orElseThrow();
+    @Transactional
+    public void enrollCourse(Long courseId, String enrollmentKey, String username) {
+        // 1. Tìm khóa học theo ID (User chọn khóa nào thì tìm khóa đó)
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Khóa học không tồn tại!"));
+
+        // 2. Kiểm tra Mã tham gia (Key)
+        if (course.getEnrollmentKey() == null || !course.getEnrollmentKey().equals(enrollmentKey)) {
+            throw new RuntimeException("Mã tham gia không chính xác! Vui lòng kiểm tra lại.");
+        }
+
+        // 3. Kiểm tra đã học chưa
+        User student = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
 
         if (enrollmentRepository.existsByStudentAndCourse(student, course)) {
-            throw new RuntimeException("Already enrolled");
+            throw new RuntimeException("Bạn đã tham gia khóa học này rồi!");
         }
-        enrollmentRepository.save(Enrollment.builder().student(student).course(course).progressPercent(0.0f).build());
+
+        // 4. Lưu Enrollment
+        Enrollment enrollment = Enrollment.builder()
+                .student(student)
+                .course(course)
+                .progressPercent(0.0f)
+                .build();
+        enrollmentRepository.save(enrollment);
+    }
+    @Override
+    public List<Course> getAllCourses() {
+        return courseRepository.findAll(); // Lấy tất cả khóa học trong hệ thống
     }
 
 
 
     @Override
-    public List<Course> getMyEnrolledCourses(String studentUsername) {
+    public List<Enrollment> getMyEnrolledCourses(String studentUsername) {
         User student = userRepository.findByUsername(studentUsername)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
-        // Lấy danh sách enrollment rồi map ra Course
-        return enrollmentRepository.findByStudent(student).stream()
-                .map(Enrollment::getCourse)
-                .collect(Collectors.toList());
+        // Trả về nguyên cục Enrollment để lấy được field progressPercent
+        return enrollmentRepository.findByStudent(student);
     }
     // --- LOGIC CHẤM ĐIỂM QUIZ TỰ ĐỘNG ---
     @Override
@@ -141,28 +162,17 @@ public class StudentServiceImpl implements StudentService {
     // --- HELPER: TÍNH TOÁN TIẾN ĐỘ ---
     private void updateProgress(Enrollment enrollment) {
         Course course = enrollment.getCourse();
-
-        // 1. Tổng số bài tập trong khóa học (Quiz + Assignment)
-        long totalQuizzes = course.getChapters().stream()
-                .flatMap(c -> c.getLessons().stream())
-                .mapToLong(l -> l.getQuizzes().size()).sum();
-
-        long totalAssignments = course.getChapters().stream()
-                .flatMap(c -> c.getLessons().stream())
-                .mapToLong(l -> l.getAssignments().size()).sum();
-
+        long totalQuizzes = course.getChapters().stream().flatMap(c -> c.getLessons().stream()).mapToLong(l -> l.getQuizzes().size()).sum();
+        long totalAssignments = course.getChapters().stream().flatMap(c -> c.getLessons().stream()).mapToLong(l -> l.getAssignments().size()).sum();
         long totalItems = totalQuizzes + totalAssignments;
-        if (totalItems == 0) return;
 
-        // 2. Số bài tập đã qua (Score >= 5.0)
-        long passedItems = submissionRepository.countPassedItems(enrollment.getEnrollmentId());
-
-        // 3. Tính %
-        float progress = (float) passedItems / totalItems * 100;
-        if (progress > 100.0f) progress = 100.0f;
-
-        // 4. Lưu lại
-        enrollment.setProgressPercent(progress);
+        if (totalItems == 0) {
+            enrollment.setProgressPercent(0.0f);
+        } else {
+            long passedItems = submissionRepository.countPassedItems(enrollment.getEnrollmentId());
+            float progress = (float) passedItems / totalItems * 100;
+            enrollment.setProgressPercent(progress > 100 ? 100 : progress);
+        }
         enrollmentRepository.save(enrollment);
     }
 
@@ -183,5 +193,76 @@ public class StudentServiceImpl implements StudentService {
         }
 
         return lesson;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Course getFullCourseDetail(Long courseId, String username) {
+        User student = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+
+        // 1. Kiểm tra xem học sinh có trong danh sách lớp không
+        if (!enrollmentRepository.existsByStudentAndCourse(student, course)) {
+            throw new RuntimeException("Bạn chưa tham gia khóa học này!");
+        }
+
+        // 2. Ép Hibernate tải dữ liệu Chapters và Lessons (tránh lỗi Lazy Loading)
+        // Vì mặc định JPA sẽ không tự lấy list con
+        course.getChapters().forEach(chapter -> {
+            chapter.getLessons().forEach(lesson -> {
+                // Chỉ cần gọi .size() là Hibernate sẽ query lấy dữ liệu về
+                lesson.getQuizzes().size();
+                lesson.getAssignments().size();
+            });
+        });
+
+        return course;
+    }
+
+    @Transactional
+    public Submission getLatestQuizSubmission(Long quizId, String username) {
+        User student = userRepository.findByUsername(username).orElseThrow();
+        Quiz quiz = quizRepository.findById(quizId).orElseThrow();
+        Enrollment enrollment = enrollmentRepository.findByStudentAndCourse(student, quiz.getLesson().getChapter().getCourse()).orElseThrow();
+
+        Submission submission = submissionRepository.findLatestQuizSubmission(enrollment.getEnrollmentId(), quizId).orElse(null);
+
+        if (submission != null) {
+            // Chỉ cần gọi size() là đủ để Hibernate tải list về
+            // Nhờ @JsonIgnore bên Entity, nó sẽ không bị vòng lặp nữa
+            submission.getAnswers().size();
+            submission.getAnswers().forEach(ans -> {
+                if (ans.getQuestion() != null) ans.getQuestion().getContent();
+                if (ans.getSelectedOption() != null) ans.getSelectedOption().getContent();
+            });
+        }
+        return submission;
+    }
+    @Override
+    public Submission getLatestAssignmentSubmission(Long assignmentId, String username) {
+        User student = userRepository.findByUsername(username).orElseThrow();
+        Assignment assignment = assignmentRepository.findById(assignmentId).orElseThrow();
+        Enrollment enrollment = enrollmentRepository.findByStudentAndCourse(student, assignment.getLesson().getChapter().getCourse()).orElseThrow();
+
+        return submissionRepository.findLatestAssignmentSubmission(enrollment.getEnrollmentId(), assignmentId).orElse(null);
+    }
+
+    @Override
+    @Transactional
+    public void deleteSubmission(Long submissionId, String username) {
+        Submission submission = submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new RuntimeException("Submission not found"));
+
+        // Chỉ cho phép xóa nếu là bài của chính mình và chưa được chấm
+        if (!submission.getEnrollment().getStudent().getUsername().equals(username)) {
+            throw new RuntimeException("Unauthorized");
+        }
+        if (submission.getStatus() == SubmissionStatus.GRADED) {
+            throw new RuntimeException("Bài đã được chấm, không thể thu hồi!");
+        }
+        submissionRepository.delete(submission);
     }
 }
