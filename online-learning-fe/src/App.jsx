@@ -11,6 +11,7 @@ import GradingDashboard from './pages/teacher/GradingDashboard';
 
 import StudentDashboard from './pages/student/StudentDashboard';
 import StudentCourseDetail from './pages/student/StudentCourseDetail';
+import UserProfile from './pages/UserProfile';
 
 function App() {
   return (
@@ -19,6 +20,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
+
+        <Route path="/profile" element={<UserProfile />} />
 
         {/* TEACHER ROUTES */}
         <Route path="/teacher/dashboard" element={<TeacherDashboard />} />

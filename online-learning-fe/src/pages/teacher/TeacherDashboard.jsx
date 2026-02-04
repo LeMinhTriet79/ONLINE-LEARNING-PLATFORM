@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import axiosClient from '../../api/axiosClient';
 import { Container, Row, Col, Card, Button, Modal, Form, Spinner, InputGroup, ProgressBar, Badge } from 'react-bootstrap';
 // Thêm icon CheckCircle
-import { PlusCircle, JournalBookmarkFill, BoxArrowRight, PencilSquare, Trash, CloudArrowUp, Key, CheckCircle } from 'react-bootstrap-icons';
+import { PlusCircle, JournalBookmarkFill, BoxArrowRight, PencilSquare, Trash, CloudArrowUp, Key, CheckCircle, PersonCircle } from 'react-bootstrap-icons';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -99,11 +99,10 @@ const TeacherDashboard = () => {
             <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                 <h2 className="text-primary"><JournalBookmarkFill className="me-2" /> Quản Lý Khóa Học</h2>
                 <div>
-                    {/* --- NÚT CHẤM BÀI MỚI THÊM VÀO ĐÂY --- */}
-                    <Button variant="warning" className="me-2 text-dark fw-bold" onClick={() => navigate('/teacher/grading')}>
-                        <CheckCircle className="me-1" /> Chấm Bài & Tiến Độ
+                    
+                    <Button variant="outline-primary" className="me-2" onClick={() => navigate('/profile')}>
+                        <PersonCircle className="me-1"/> Hồ Sơ
                     </Button>
-                    {/* -------------------------------------- */}
 
                     <Button variant="success" className="me-2" onClick={() => handleOpenModal()}>
                         <PlusCircle className="me-1" /> Tạo Khóa Học Mới

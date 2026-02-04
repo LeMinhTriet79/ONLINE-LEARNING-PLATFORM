@@ -1,5 +1,7 @@
 package com.swd.online_learning.repository;
 
+import com.swd.online_learning.entity.Assignment;
+import com.swd.online_learning.entity.Enrollment;
 import com.swd.online_learning.entity.Quiz;
 import com.swd.online_learning.entity.Submission;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -34,4 +36,18 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     // (Tùy chọn) Hàm xóa hết bài làm của Quiz này (Nếu bạn muốn Reset)
     void deleteByQuiz(Quiz quiz);
+
+    // Tìm tất cả bài nộp của 1 Quiz (để xóa)
+    List<Submission> findByQuiz(Quiz quiz);
+
+    // Tìm tất cả bài nộp của 1 Assignment (để xóa)
+    List<Submission> findByAssignment(Assignment assignment);
+
+    // Xóa tất cả bài nộp thuộc về một Enrollment (Dùng khi xóa khóa học)
+    void deleteByEnrollment(Enrollment enrollment);
+
+    @Query("SELECT s FROM Submission s " +
+            "WHERE s.enrollment.course.courseId = :courseId " +
+            "AND s.status = 'PENDING'")
+    List<Submission> findPendingSubmissionsByCourse(Long courseId);
 }

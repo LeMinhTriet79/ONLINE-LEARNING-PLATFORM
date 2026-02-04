@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axiosClient from '../../api/axiosClient';
 import { Container, Row, Col, Card, Button, Modal, Form, Spinner, Badge, InputGroup, ProgressBar } from 'react-bootstrap';
-import { JournalBookmarkFill, BoxArrowRight, UnlockFill, PlayCircle, CheckCircleFill, Search } from 'react-bootstrap-icons';
+import { JournalBookmarkFill, BoxArrowRight, UnlockFill, PlayCircle, CheckCircleFill, Search, PersonCircle } from 'react-bootstrap-icons';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -89,6 +89,11 @@ const StudentDashboard = () => {
         <Container className="py-5">
             <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                 <h2 className="text-primary"><JournalBookmarkFill className="me-2" /> Góc Học Tập</h2>
+
+                <Button variant="outline-primary" className="me-2" onClick={() => navigate('/profile')}>
+                        <PersonCircle className="me-1"/> Hồ Sơ
+                    </Button>
+
                 <Button variant="outline-danger" onClick={handleLogout}>
                     <BoxArrowRight /> Đăng xuất
                 </Button>

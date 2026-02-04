@@ -78,8 +78,20 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional
     public void deleteCourse(Long courseId) {
-        if (!courseRepository.existsById(courseId)) throw new RuntimeException("Course not found");
-        courseRepository.deleteById(courseId); // Xóa Course -> Xóa luôn Chapter -> Lesson (do Cascade)
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+
+        // 1. Xóa tất cả Enrollments (và Submissions đi kèm)
+        List<Enrollment> enrollments = enrollmentRepository.findByCourse(course);
+        for (Enrollment enrollment : enrollments) {
+            // Xóa hết bài nộp của học sinh này trước
+            submissionRepository.deleteByEnrollment(enrollment);
+            // Xóa ghi danh
+            enrollmentRepository.delete(enrollment);
+        }
+
+        // 2. Xóa Khóa học (Cascade sẽ tự xóa Chapter -> Lesson -> Quiz/Assignment)
+        courseRepository.delete(course);
     }
 
     // ================= CHAPTER (CHƯƠNG) =================
@@ -109,8 +121,20 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional
     public void deleteChapter(Long chapterId) {
-        if (!chapterRepository.existsById(chapterId)) throw new RuntimeException("Chapter not found");
-        chapterRepository.deleteById(chapterId);
+        Chapter chapter = chapterRepository.findById(chapterId)
+                .orElseThrow(() -> new RuntimeException("Chapter not found"));
+        Course course = chapter.getCourse();
+
+        // 1. Duyệt qua tất cả bài học để xóa sạch Submissions con
+        for (Lesson lesson : chapter.getLessons()) {
+            cleanUpLessonData(lesson); // Hàm dọn dẹp (xem bên dưới)
+        }
+
+        // 2. Xóa Chương
+        chapterRepository.delete(chapter);
+
+        // 3. Tính lại tiến độ (Vì mất đi một lượng bài tập lớn)
+        recalculateCourseProgress(course);
     }
 
     // ================= LESSON (BÀI HỌC) =================
@@ -152,8 +176,22 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional
     public void deleteLesson(Long lessonId) {
-        if (!lessonRepository.existsById(lessonId)) throw new RuntimeException("Lesson not found");
-        lessonRepository.deleteById(lessonId);
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+
+        Chapter chapter = lesson.getChapter();
+        Course course = chapter.getCourse();
+
+        // 1. Xóa dữ liệu bài làm của học sinh trước
+        cleanUpLessonData(lesson);
+
+        // 2. QUAN TRỌNG: Xóa khỏi danh sách của Cha (Chapter)
+        // Khi orphanRemoval = true ở Chapter, hành động này sẽ xóa Lesson khỏi DB
+        chapter.getLessons().remove(lesson);
+        chapterRepository.save(chapter); // Lưu cha để kích hoạt xóa con
+
+        // 3. Tính lại tiến độ
+        recalculateCourseProgress(course);
     }
 
     // ================= QUIZ & ASSIGNMENT (BÀI TẬP) =================
@@ -162,6 +200,7 @@ public class TeacherServiceImpl implements TeacherService {
     public Quiz createQuiz(Long lessonId, QuizRequest request) {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new RuntimeException("Lesson not found"));
+
         Quiz quiz = Quiz.builder().title(request.getTitle()).lesson(lesson).build();
 
         List<Question> questions = request.getQuestions().stream().map(qReq -> {
@@ -174,18 +213,38 @@ public class TeacherServiceImpl implements TeacherService {
         }).collect(Collectors.toList());
 
         quiz.setQuestions(questions);
-        return quizRepository.save(quiz);
+        Quiz savedQuiz = quizRepository.save(quiz);
+
+        // --- QUAN TRỌNG: TÍNH LẠI TIẾN ĐỘ VÌ TỔNG SỐ BÀI ĐÃ TĂNG ---
+        recalculateCourseProgress(lesson.getChapter().getCourse());
+
+        return savedQuiz;
     }
 
     @Override
     @Transactional
     public Quiz updateQuiz(Long quizId, QuizRequest request) {
-        Quiz quiz = quizRepository.findById(quizId).orElseThrow(() -> new RuntimeException("Quiz not found"));
-        quiz.setTitle(request.getTitle());
-        quiz.getQuestions().clear(); // Xóa cũ (Entity phải có orphanRemoval=true)
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Quiz not found"));
 
-        List<Question> newQuestions = request.getQuestions().stream().map(qReq -> {
-            Question question = Question.builder().content(qReq.getContent()).quiz(quiz).build();
+        quiz.setTitle(request.getTitle());
+
+        // --- LOGIC SMART UPDATE (Thay vì clear() toàn bộ) ---
+        // 1. Duyệt qua danh sách câu hỏi từ Request gửi lên
+        List<Question> updatedQuestions = request.getQuestions().stream().map(qReq -> {
+            // Nếu Frontend gửi ID -> Tìm câu hỏi cũ để cập nhật
+            // Nếu không có ID -> Tạo câu hỏi mới
+            // (Lưu ý: Bạn cần đảm bảo QuizRequest.QuestionRequest có trường id, hoặc logic tìm kiếm tương đương)
+            // Tuy nhiên, với cấu trúc hiện tại, cách đơn giản nhất để tránh lỗi FK là:
+            // "Nếu Quiz đã có người làm, CHẶN không cho sửa cấu trúc, chỉ cho sửa text".
+
+            // Nhưng để hỗ trợ "Thêm câu hỏi", ta làm như sau:
+            Question question = Question.builder()
+                    .content(qReq.getContent())
+                    .quiz(quiz)
+                    .build();
+
+            // Tạm thời tạo mới options cho câu hỏi này
             List<QuizOption> options = qReq.getOptions().stream().map(oReq ->
                     QuizOption.builder().content(oReq.getContent()).isCorrect(oReq.isCorrect()).question(question).build()
             ).collect(Collectors.toList());
@@ -193,16 +252,52 @@ public class TeacherServiceImpl implements TeacherService {
             return question;
         }).collect(Collectors.toList());
 
-        quiz.getQuestions().addAll(newQuestions);
+        // 2. Xử lý xóa cũ thay mới
+        // NẾU QUIZ CHƯA CÓ AI LÀM -> Xóa thoải mái
+        if (!submissionRepository.existsByQuiz(quiz)) {
+            quiz.getQuestions().clear();
+            quiz.getQuestions().addAll(updatedQuestions);
+        } else {
+            // NẾU ĐÃ CÓ NGƯỜI LÀM -> Không được xóa câu hỏi cũ, chỉ được THÊM câu hỏi mới
+            // Đây là giải pháp an toàn nhất. Nếu muốn xóa câu cũ, phải xóa Submission trước.
+            // Đoạn code dưới đây sẽ nối thêm câu hỏi mới vào danh sách cũ
+            // (Lưu ý: Cách này sẽ duplicate câu hỏi nếu bạn bấm lưu nhiều lần mà Frontend gửi cả câu cũ lên)
+
+            // GIẢI PHÁP TỐI ƯU NHẤT CHO DỰ ÁN NÀY:
+            // Xóa sạch Submission cũ trước khi Update (Reset kết quả thi của học sinh)
+            submissionRepository.deleteAll(submissionRepository.findByQuiz(quiz));
+            // Sau đó mới xóa câu hỏi
+            quiz.getQuestions().clear();
+            quiz.getQuestions().addAll(updatedQuestions);
+
+            // Tính lại tiến độ (vì bài làm bị xóa, % sẽ giảm)
+            recalculateCourseProgress(quiz.getLesson().getChapter().getCourse());
+        }
+
         return quizRepository.save(quiz);
     }
 
     @Override
     @Transactional
     public void deleteQuiz(Long quizId) {
-        quizRepository.deleteById(quizId);
-    }
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Quiz not found"));
 
+        Lesson lesson = quiz.getLesson();
+        Course course = lesson.getChapter().getCourse();
+
+        // 1. Xóa bài làm
+        List<Submission> submissions = submissionRepository.findByQuiz(quiz);
+        submissionRepository.deleteAll(submissions);
+
+        // 2. QUAN TRỌNG: Xóa khỏi danh sách của Cha (Lesson)
+        // Khi orphanRemoval = true ở Lesson (vừa thêm ở bước 1), Quiz sẽ bị xóa vĩnh viễn
+        lesson.getQuizzes().remove(quiz);
+        lessonRepository.save(lesson);
+
+        // 3. Tính lại tiến độ
+        recalculateCourseProgress(course);
+    }
     @Override
     @Transactional
     public Assignment createAssignment(Long lessonId, AssignmentRequest request) {
@@ -212,7 +307,13 @@ public class TeacherServiceImpl implements TeacherService {
                 .instructions(request.getInstructions())
                 .attachmentUrl(request.getAttachmentUrl())
                 .lesson(lesson).build();
-        return assignmentRepository.save(assignment);
+
+        Assignment savedAssign = assignmentRepository.save(assignment);
+
+        // --- QUAN TRỌNG: TÍNH LẠI TIẾN ĐỘ ---
+        recalculateCourseProgress(lesson.getChapter().getCourse());
+
+        return savedAssign;
     }
 
     @Override
@@ -228,10 +329,23 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional
     public void deleteAssignment(Long assignmentId) {
-        assignmentRepository.deleteById(assignmentId);
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new RuntimeException("Assignment not found"));
+
+        Lesson lesson = assignment.getLesson();
+        Course course = lesson.getChapter().getCourse();
+
+        // 1. Xóa bài làm
+        List<Submission> submissions = submissionRepository.findByAssignment(assignment);
+        submissionRepository.deleteAll(submissions);
+
+        // 2. QUAN TRỌNG: Xóa khỏi danh sách của Cha (Lesson)
+        lesson.getAssignments().remove(assignment);
+        lessonRepository.save(lesson);
+
+        // 3. Tính lại tiến độ
+        recalculateCourseProgress(course);
     }
-
-
     @Override
     @Transactional
     public Submission gradeAssignment(Long submissionId, GradeAssignmentRequest request) {
@@ -278,5 +392,40 @@ public class TeacherServiceImpl implements TeacherService {
         enrollmentRepository.save(enrollment);
     }
 
+    private void recalculateCourseProgress(Course course) {
+        List<Enrollment> enrollments = enrollmentRepository.findByCourse(course);
+        for (Enrollment enrollment : enrollments) {
+            updateProgress(enrollment); // Hàm updateProgress bạn đã có ở code trước
+        }
+    }
+
+    private void cleanUpLessonData(Lesson lesson) {
+        // Xóa sạch bài nộp của các Quiz trong bài học này
+        for (Quiz quiz : lesson.getQuizzes()) {
+            List<Submission> submissions = submissionRepository.findByQuiz(quiz);
+            submissionRepository.deleteAll(submissions);
+        }
+        // Xóa sạch bài nộp của các Assignment trong bài học này
+        for (Assignment assignment : lesson.getAssignments()) {
+            List<Submission> submissions = submissionRepository.findByAssignment(assignment);
+            submissionRepository.deleteAll(submissions);
+        }
+    }
+
+    @Override
+    public List<Enrollment> getCourseStudents(Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+        return enrollmentRepository.findByCourse(course);
+    }
+
+    @Override
+    public List<Submission> getCoursePendingSubmissions(Long courseId) {
+        // Chỉ cần check course tồn tại là được
+        if (!courseRepository.existsById(courseId)) {
+            throw new RuntimeException("Course not found");
+        }
+        return submissionRepository.findPendingSubmissionsByCourse(courseId);
+    }
 
 }

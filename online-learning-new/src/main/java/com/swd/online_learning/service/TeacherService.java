@@ -33,4 +33,7 @@ public interface TeacherService {
 
     // --- 5. CHẤM ĐIỂM ---
     Submission gradeAssignment(Long submissionId, GradeAssignmentRequest request);
+
+    List<Enrollment> getCourseStudents(Long courseId); // Lấy DS học sinh
+    List<Submission> getCoursePendingSubmissions(Long courseId); // Lấy bài cần chấm của khóa đó
 }

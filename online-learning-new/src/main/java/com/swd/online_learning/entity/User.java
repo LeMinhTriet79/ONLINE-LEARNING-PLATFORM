@@ -24,6 +24,7 @@ public class User {
 
     private String email;
 
+    private String avatarUrl;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;

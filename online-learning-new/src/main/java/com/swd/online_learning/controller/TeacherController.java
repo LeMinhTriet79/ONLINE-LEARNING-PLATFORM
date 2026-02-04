@@ -122,4 +122,16 @@ public class TeacherController {
             @RequestBody GradeAssignmentRequest request) {
         return ResponseEntity.ok(ApiResponse.success(teacherService.gradeAssignment(submissionId, request), "Graded"));
     }
+
+    // 1. Lấy danh sách học viên + tiến độ của khóa học
+    @GetMapping("/courses/{courseId}/students")
+    public ResponseEntity<ApiResponse<List<Enrollment>>> getCourseStudents(@PathVariable Long courseId) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.getCourseStudents(courseId), "Fetched students"));
+    }
+
+    // 2. Lấy danh sách bài cần chấm CỦA KHÓA HỌC NÀY
+    @GetMapping("/courses/{courseId}/submissions/pending")
+    public ResponseEntity<ApiResponse<List<Submission>>> getCoursePendingSubmissions(@PathVariable Long courseId) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.getCoursePendingSubmissions(courseId), "Fetched pending submissions"));
+    }
 }

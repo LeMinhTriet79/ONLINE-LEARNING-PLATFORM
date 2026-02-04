@@ -31,9 +31,10 @@ public class Lesson {
     private String attachmentUrl;
 
     private Integer orderIndex;
-    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Quiz> quizzes;
 
-    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL)
+    // --- SỬA DÒNG NÀY: THÊM orphanRemoval = true ---
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assignment> assignments;
 }
