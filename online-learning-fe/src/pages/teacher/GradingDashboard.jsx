@@ -44,88 +44,184 @@ const GradingDashboard = () => {
     };
 
     return (
-        <Container className="py-5">
-            <div className="d-flex align-items-center mb-4">
-                <Button variant="outline-secondary" className="me-3" onClick={() => navigate('/teacher/dashboard')}>
-                    <ArrowLeft/> Quay lại
-                </Button>
-                <h2 className="text-primary m-0"><CheckCircle className="me-2"/> Danh Sách Chờ Duyệt Bài</h2>
-            </div>
+        <Container fluid style={{minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', padding: '32px'}}>
+            <Container>
+                {/* Header gradient */}
+                <div className="mb-4 p-4" style={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    borderRadius: '20px',
+                    boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3)'
+                }}>
+                    <div className="d-flex justify-content-between align-items-center">
+                        <h2 className="text-white fw-bold m-0" style={{textShadow: '0 2px 4px rgba(0,0,0,0.1)'}}>
+                            <CheckCircle className="me-2" size={28}/> ✅ Danh Sách Chờ Duyệt Bài
+                        </h2>
+                        <Button 
+                            className="fw-semibold"
+                            onClick={() => navigate('/teacher/dashboard')}
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.25)',
+                                backdropFilter: 'blur(10px)',
+                                border: '2px solid white',
+                                color: 'white',
+                                borderRadius: '12px',
+                                padding: '10px 24px'
+                            }}>
+                            <ArrowLeft className="me-1" size={18}/> Quay lại
+                        </Button>
+                    </div>
+                </div>
             
-            <Card className="shadow-sm border-0">
-                <Card.Body className="p-0">
-                    {submissions.length === 0 ? (
-                        <div className="text-center p-5 text-muted">
-                            <h5>Tuyệt vời! Không có bài tập nào cần chấm.</h5>
-                            <p>Hãy nhắc học sinh nộp bài nhé.</p>
-                        </div>
-                    ) : (
-                        <Table hover responsive className="m-0 align-middle">
-                            <thead className="bg-light">
-                                <tr>
-                                    <th className="ps-4">Học Sinh</th>
-                                    <th>Bài Tập</th>
-                                    <th>File Nộp</th>
-                                    <th>Ngày Nộp</th>
-                                    <th className="text-center">Hành Động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {submissions.map(sub => (
-                                    <tr key={sub.submissionId}>
-                                        <td className="ps-4 fw-bold">{sub.enrollment?.student?.fullName}</td>
-                                        <td>
-                                            <div className="fw-bold text-primary">{sub.assignment?.title}</div>
-                                            <small className="text-muted">{sub.enrollment?.course?.title}</small>
-                                        </td>
-                                        <td>
-                                            {sub.attachmentUrl ? (
-                                                <a href={sub.attachmentUrl} target="_blank" rel="noreferrer" className="text-decoration-none">
-                                                    <FileEarmarkText/> Xem File
-                                                </a>
-                                            ) : <span className="text-muted">Không có file</span>}
-                                        </td>
-                                        <td><Badge bg="warning" text="dark">Chờ chấm</Badge></td>
-                                        <td className="text-center">
-                                            <Button variant="success" size="sm" onClick={() => openGradeModal(sub)}>
-                                                <Pen className="me-1"/> Chấm Điểm
-                                            </Button>
-                                        </td>
+                <Card style={{border: 'none', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'}}>
+                    <Card.Body className="p-0">
+                        {submissions.length === 0 ? (
+                            <div className="text-center p-5">
+                                <div style={{fontSize: '4rem', marginBottom: '16px'}}>🎉</div>
+                                <h5 style={{color: '#6b7280', marginBottom: '12px'}}>Tuyệt vời! Không có bài tập nào cần chấm.</h5>
+                                <p className="text-muted">Hãy nhắc học sinh nộp bài nhé.</p>
+                            </div>
+                        ) : (
+                            <Table hover responsive className="m-0 align-middle" style={{fontSize: '0.95rem'}}>
+                                <thead style={{background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)'}}>
+                                    <tr>
+                                        <th className="ps-4 py-3 fw-bold" style={{color: '#4b5563'}}>Học Sinh</th>
+                                        <th className="py-3 fw-bold" style={{color: '#4b5563'}}>Bài Tập</th>
+                                        <th className="py-3 fw-bold" style={{color: '#4b5563'}}>File Nộp</th>
+                                        <th className="py-3 fw-bold" style={{color: '#4b5563'}}>Trạng Thái</th>
+                                        <th className="text-center py-3 fw-bold" style={{color: '#4b5563'}}>Hành Động</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </Table>
-                    )}
-                </Card.Body>
-            </Card>
+                                </thead>
+                                <tbody>
+                                    {submissions.map(sub => (
+                                        <tr key={sub.submissionId} style={{transition: 'background 0.2s'}}>
+                                            <td className="ps-4 py-3 fw-bold" style={{color: '#1f2937'}}>{sub.enrollment?.student?.fullName}</td>
+                                            <td className="py-3">
+                                                <div className="fw-bold mb-1" style={{color: '#667eea'}}>{sub.assignment?.title}</div>
+                                                <small className="text-muted">{sub.enrollment?.course?.title}</small>
+                                            </td>
+                                            <td className="py-3">
+                                                {sub.attachmentUrl ? (
+                                                    <a 
+                                                        href={sub.attachmentUrl} 
+                                                        target="_blank" 
+                                                        rel="noreferrer" 
+                                                        className="btn btn-sm"
+                                                        style={{
+                                                            background: 'white',
+                                                            border: '2px solid #667eea',
+                                                            color: '#667eea',
+                                                            borderRadius: '8px',
+                                                            padding: '6px 14px',
+                                                            textDecoration: 'none'
+                                                        }}>
+                                                        <FileEarmarkText className="me-1" size={14}/> Xem File
+                                                    </a>
+                                                ) : <span className="text-muted">Không có file</span>}
+                                            </td>
+                                            <td className="py-3">
+                                                <Badge 
+                                                    className="p-2"
+                                                    style={{
+                                                        background: 'linear-gradient(135deg, #fb923c 0%, #f59e0b 100%)',
+                                                        color: 'white',
+                                                        borderRadius: '8px',
+                                                        fontSize: '0.85rem',
+                                                        fontWeight: '600'
+                                                    }}>
+                                                    Chờ chấm
+                                                </Badge>
+                                            </td>
+                                            <td className="text-center py-3">
+                                                <Button 
+                                                    size="sm" 
+                                                    className="fw-semibold text-white border-0"
+                                                    onClick={() => openGradeModal(sub)}
+                                                    style={{
+                                                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                                        borderRadius: '10px',
+                                                        padding: '8px 20px',
+                                                        boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+                                                    }}>
+                                                    <Pen className="me-1" size={14}/> Chấm Điểm
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        )}
+                    </Card.Body>
+                </Card>
 
-            <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-                <Modal.Header closeButton className="bg-success text-white">
-                    <Modal.Title>Chấm Bài: {currentSub?.enrollment?.student?.fullName}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form.Group className="mb-3">
-                        <Form.Label className="fw-bold">Điểm số (Thang 10)</Form.Label>
-                        <Form.Control 
-                            type="number" min="0" max="10" 
-                            value={score} onChange={e => setScore(e.target.value)} 
-                            autoFocus
-                        />
-                        <Form.Text className="text-muted">Nhập &ge; 5.0 để tính là Đạt (Passed).</Form.Text>
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                        <Form.Label className="fw-bold">Nhận xét / Feedback</Form.Label>
-                        <Form.Control 
-                            as="textarea" rows={3} 
-                            value={feedback} onChange={e => setFeedback(e.target.value)} 
-                        />
-                    </Form.Group>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowModal(false)}>Hủy</Button>
-                    <Button variant="success" onClick={handleGradeSubmit}>Xác Nhận & Lưu</Button>
-                </Modal.Footer>
-            </Modal>
+                <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+                    <Modal.Header 
+                        closeButton 
+                        className="border-0 text-white"
+                        style={{
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            padding: '24px'
+                        }}>
+                        <Modal.Title className="fw-bold" style={{fontSize: '1.3rem'}}>
+                            ✅ Chấm Bài: {currentSub?.enrollment?.student?.fullName}
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body style={{padding: '32px', background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)'}}>
+                        <Form.Group className="mb-4">
+                            <Form.Label className="fw-bold mb-2" style={{color: '#10b981'}}>🎯 Điểm số (Thang 10)</Form.Label>
+                            <Form.Control 
+                                type="number" min="0" max="10" 
+                                value={score} onChange={e => setScore(e.target.value)} 
+                                autoFocus
+                                size="lg"
+                                style={{
+                                    borderRadius: '12px',
+                                    border: '2px solid #10b981',
+                                    padding: '12px 16px',
+                                    fontSize: '1.2rem',
+                                    fontWeight: '700',
+                                    color: '#10b981',
+                                    textAlign: 'center'
+                                }}
+                            />
+                            <Form.Text className="text-muted d-block mt-2" style={{fontSize: '0.9rem'}}>
+                                ℹ️ Nhập ≥ 5.0 để tính là Đạt (Passed).
+                            </Form.Text>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label className="fw-bold mb-2" style={{color: '#10b981'}}>💬 Nhận xét / Feedback</Form.Label>
+                            <Form.Control 
+                                as="textarea" rows={4} 
+                                value={feedback} onChange={e => setFeedback(e.target.value)} 
+                                style={{
+                                    borderRadius: '12px',
+                                    border: '2px solid #e5e7eb',
+                                    padding: '12px 16px',
+                                    lineHeight: '1.6'
+                                }}
+                            />
+                        </Form.Group>
+                    </Modal.Body>
+                    <Modal.Footer style={{background: '#f9fafb', borderTop: '2px solid #e5e7eb', padding: '20px 32px'}}>
+                        <Button 
+                            variant="secondary" 
+                            onClick={() => setShowModal(false)}
+                            style={{borderRadius: '10px', padding: '10px 28px', fontWeight: '600'}}>
+                            Hủy
+                        </Button>
+                        <Button 
+                            onClick={handleGradeSubmit}
+                            className="text-white border-0 fw-semibold"
+                            style={{
+                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                borderRadius: '10px',
+                                padding: '10px 32px',
+                                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                            }}>
+                            ✔️ Xác Nhận & Lưu
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            </Container>
         </Container>
     );
 };

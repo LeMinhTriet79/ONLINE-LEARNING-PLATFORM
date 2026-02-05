@@ -77,49 +77,146 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
 
     return (
         <Modal show={show} onHide={handleClose} size="lg" backdrop="static">
-            <Modal.Header closeButton>
-                <Modal.Title>
-                    {quiz?.title} {viewMode === 'REVIEW' && <Badge bg="info">Xem Lại Kết Quả</Badge>}
+            {/* Header - Gradient design */}
+            <Modal.Header closeButton className="border-0 text-white" style={{background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', padding: '24px'}}>
+                <Modal.Title className="fw-bold d-flex align-items-center" style={{fontSize: '1.3rem'}}>
+                    ❓ {quiz?.title} 
+                    {viewMode === 'REVIEW' && (
+                        <Badge 
+                            className="ms-3"
+                            style={{
+                                background: '#fbbf24',
+                                color: '#1f2937',
+                                padding: '8px 16px',
+                                borderRadius: '10px',
+                                fontSize: '0.85rem',
+                                fontWeight: '600'
+                            }}>
+                            👁️ Xem Lại Kết Quả
+                        </Badge>
+                    )}
                 </Modal.Title>
             </Modal.Header>
-            <Modal.Body style={{maxHeight: '75vh', overflowY: 'auto'}}>
+            <Modal.Body style={{maxHeight: '75vh', overflowY: 'auto', background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', padding: '28px'}}>
                 
-                {/* PHẦN ĐIỂM SỐ */}
+                {/* PHẦN ĐIỂM SỐ - Thiết kế hiện đại */}
                 {viewMode === 'REVIEW' && submission && (
-                    <div className={`text-center mb-4 p-3 border rounded ${submission.score >= 5 ? 'bg-success-subtle' : 'bg-danger-subtle'}`}>
-                        <h1 className={submission.score >= 5 ? "text-success" : "text-danger"}>
-                            {submission.score ? submission.score.toFixed(1) : 0} / 10
-                        </h1>
-                        <p className="fw-bold mb-2">{submission.score >= 5 ? "ĐÃ ĐẠT (PASSED)" : "CHƯA ĐẠT (FAILED)"}</p>
+                    <div 
+                        className="text-center mb-4 p-5"
+                        style={{
+                            background: submission.score >= 5 
+                                ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
+                                : 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+                            borderRadius: '20px',
+                            border: submission.score >= 5 ? '3px solid #10b981' : '3px solid #ef4444',
+                            boxShadow: submission.score >= 5 
+                                ? '0 8px 24px rgba(16, 185, 129, 0.3)'
+                                : '0 8px 24px rgba(239, 68, 68, 0.3)'
+                        }}>
+                        {/* Icon & Score */}
+                        <div className="mb-3">
+                            <div className="d-inline-block mb-2">
+                                <span style={{fontSize: '4rem'}}>
+                                    {submission.score >= 5 ? '🎉' : '😢'}
+                                </span>
+                            </div>
+                            <h1 
+                                className="fw-bold mb-2"
+                                style={{
+                                    fontSize: '3.5rem',
+                                    color: submission.score >= 5 ? '#059669' : '#dc2626',
+                                    textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                }}>
+                                {submission.score ? submission.score.toFixed(1) : 0} / 10
+                            </h1>
+                            <h4 
+                                className="fw-bold mb-4"
+                                style={{color: submission.score >= 5 ? '#047857' : '#b91c1c'}}>
+                                {submission.score >= 5 ? "✅ ĐÃ ĐẠT (PASSED)" : "❌ CHƯA ĐẠT (FAILED)"}
+                            </h4>
+                        </div>
                         
-                        <div className="d-flex justify-content-center gap-3 text-muted small">
-                             <span><CheckCircleFill className="text-success"/> Đáp án đúng</span>
-                             <span><XCircleFill className="text-danger"/> Đáp án bạn chọn sai</span>
+                        {/* Legend */}
+                        <div className="d-flex justify-content-center gap-4 mb-4 p-3" style={{background: 'rgba(255, 255, 255, 0.5)', borderRadius: '12px'}}>
+                             <span className="fw-semibold" style={{color: '#059669'}}>
+                                <CheckCircleFill className="me-2" size={18}/> Đáp án đúng
+                             </span>
+                             <span className="fw-semibold" style={{color: '#dc2626'}}>
+                                <XCircleFill className="me-2" size={18}/> Đáp án bạn chọn sai
+                             </span>
                         </div>
 
-                        <div className="mt-3">
-                            <Button variant="primary" size="sm" onClick={handleRetake}>
-                                <ArrowRepeat className="me-1"/> Làm Lại Bài Thi
+                        {/* Retake button */}
+                        <div>
+                            <Button 
+                                onClick={handleRetake}
+                                className="fw-semibold border-0 text-white"
+                                style={{
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    borderRadius: '12px',
+                                    padding: '12px 32px',
+                                    fontSize: '1rem',
+                                    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
+                                }}>
+                                <ArrowRepeat className="me-2" size={18}/> 🔄 Làm Lại Bài Thi
                             </Button>
                         </div>
                     </div>
                 )}
 
-                {/* DANH SÁCH CÂU HỎI */}
+                {/* DANH SÁCH CÂU HỎI - Thiết kế hiện đại */}
                 {quiz?.questions?.map((q, index) => (
-                    <div key={q.questionId} className="mb-4 p-3 border rounded shadow-sm bg-white">
-                        <h6 className="fw-bold text-primary">Câu {index + 1}: {q.content}</h6>
-                        <div className="mt-2">
+                    <div 
+                        key={q.questionId} 
+                        className="mb-4 p-4 bg-white"
+                        style={{
+                            borderRadius: '16px',
+                            border: '2px solid #d1fae5',
+                            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)'
+                        }}>
+                        {/* Question header */}
+                        <h6 className="fw-bold mb-3 pb-2" style={{color: '#059669', fontSize: '1.1rem', borderBottom: '2px solid #f0fdf4'}}>
+                            ❓ Câu {index + 1}: {q.content}
+                        </h6>
+                        <div className="mt-3">
                             {q.options.map(opt => {
                                 // Logic tìm xem User đã chọn option này chưa
-                                // Dùng == thay vì === để tránh lỗi khác kiểu dữ liệu (string/number)
                                 const userAns = submission?.answers?.find(a => a.question && a.question.questionId == q.questionId);
                                 const isSelected = userAns?.selectedOption?.optionId == opt.optionId;
 
                                 return (
-                                    <div key={opt.optionId} 
-                                         className="p-2 mb-2 rounded d-flex align-items-center"
-                                         style={getOptionStyle(q.questionId, opt, isSelected)}
+                                    <div 
+                                        key={opt.optionId} 
+                                        className="p-3 mb-2 d-flex align-items-center"
+                                        style={{
+                                            ...getOptionStyle(q.questionId, opt, isSelected),
+                                            borderRadius: '12px',
+                                            border: '2px solid',
+                                            borderColor: viewMode === 'REVIEW' && opt.isCorrect 
+                                                ? '#10b981' 
+                                                : viewMode === 'REVIEW' && isSelected && !opt.isCorrect
+                                                ? '#ef4444'
+                                                : '#e5e7eb',
+                                            transition: 'all 0.2s',
+                                            cursor: viewMode === 'DOING' ? 'pointer' : 'default',
+                                            backgroundColor: viewMode === 'REVIEW' && opt.isCorrect
+                                                ? '#f0fdf4'
+                                                : viewMode === 'REVIEW' && isSelected && !opt.isCorrect
+                                                ? '#fee2e2'
+                                                : 'transparent'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if(viewMode === 'DOING') {
+                                                e.currentTarget.style.borderColor = '#667eea';
+                                                e.currentTarget.style.background = '#f5f7fa';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if(viewMode === 'DOING') {
+                                                e.currentTarget.style.borderColor = '#e5e7eb';
+                                                e.currentTarget.style.background = 'transparent';
+                                            }
+                                        }}
                                     >
                                         <Form.Check 
                                             type="radio"
@@ -128,17 +225,20 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
                                             checked={
                                                 viewMode === 'DOING' 
                                                 ? answers[q.questionId] == opt.optionId
-                                                : !!isSelected // Chế độ xem lại: Chỉ check vào cái mình đã chọn
+                                                : !!isSelected
                                             }
                                             disabled={viewMode === 'REVIEW'} 
                                             onChange={() => handleSelectOption(q.questionId, opt.optionId)}
-                                            className="mb-0 flex-grow-1"
-                                            style={{pointerEvents: viewMode === 'REVIEW' ? 'none' : 'auto'}}
+                                            className="mb-0 flex-grow-1 fw-semibold"
+                                            style={{
+                                                pointerEvents: viewMode === 'REVIEW' ? 'none' : 'auto',
+                                                fontSize: '1rem'
+                                            }}
                                         />
                                         
                                         {/* Icon minh họa */}
-                                        {viewMode === 'REVIEW' && opt.isCorrect && <CheckCircleFill className="text-success ms-2 fs-5"/>}
-                                        {viewMode === 'REVIEW' && !opt.isCorrect && isSelected && <XCircleFill className="text-danger ms-2 fs-5"/>}
+                                        {viewMode === 'REVIEW' && opt.isCorrect && <CheckCircleFill className="ms-2" size={24} style={{color: '#10b981'}}/>}
+                                        {viewMode === 'REVIEW' && !opt.isCorrect && isSelected && <XCircleFill className="ms-2" size={24} style={{color: '#ef4444'}}/>}
                                     </div>
                                 );
                             })}
@@ -146,13 +246,32 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
                     </div>
                 ))}
             </Modal.Body>
-            <Modal.Footer>
+            <Modal.Footer style={{background: '#f0fdf4', borderTop: '2px solid #d1fae5', padding: '20px 28px'}}>
                 {viewMode === 'DOING' ? (
-                    <Button variant="primary" onClick={handleSubmit} disabled={Object.keys(answers).length < (quiz?.questions?.length || 0)}>
-                        Nộp Bài
+                    <Button 
+                        onClick={handleSubmit} 
+                        disabled={Object.keys(answers).length < (quiz?.questions?.length || 0)}
+                        className="fw-semibold border-0 text-white"
+                        style={{
+                            background: Object.keys(answers).length < (quiz?.questions?.length || 0)
+                                ? '#9ca3af'
+                                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            borderRadius: '10px',
+                            padding: '12px 32px',
+                            fontSize: '1rem',
+                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                            cursor: Object.keys(answers).length < (quiz?.questions?.length || 0) ? 'not-allowed' : 'pointer'
+                        }}>
+                        📝 Nộp Bài
                     </Button>
                 ) : (
-                    <Button variant="secondary" onClick={handleClose}>Đóng</Button>
+                    <Button 
+                        variant="secondary" 
+                        onClick={handleClose}
+                        style={{borderRadius: '10px', padding: '12px 32px', fontWeight: '600'}}
+                    >
+                        Đóng
+                    </Button>
                 )}
             </Modal.Footer>
         </Modal>

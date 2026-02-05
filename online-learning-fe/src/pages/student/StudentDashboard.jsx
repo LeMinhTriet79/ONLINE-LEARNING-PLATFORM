@@ -86,95 +86,223 @@ const StudentDashboard = () => {
     );
 
     return (
-        <Container className="py-5">
-            <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                <h2 className="text-primary"><JournalBookmarkFill className="me-2" /> Góc Học Tập</h2>
+        <Container fluid className="py-4" style={{minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'}}>
+            <Container>
+                {/* Header - Gradient design */}
+                <div className="d-flex justify-content-between align-items-center mb-5 p-4"
+                     style={{
+                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                         borderRadius: '20px',
+                         boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+                     }}>
+                    <h2 className="text-white fw-bold m-0" style={{textShadow: '0 2px 4px rgba(0,0,0,0.1)'}}>
+                        <JournalBookmarkFill className="me-2" size={28}/> 
+                        📚 Góc Học Tập
+                    </h2>
 
-                <Button variant="outline-primary" className="me-2" onClick={() => navigate('/profile')}>
-                        <PersonCircle className="me-1"/> Hồ Sơ
-                    </Button>
+                    <div>
+                        <Button 
+                            variant="light" 
+                            className="me-2 fw-semibold"
+                            onClick={() => navigate('/profile')}
+                            style={{borderRadius: '12px', padding: '10px 20px'}}
+                        >
+                            <PersonCircle className="me-1" size={18}/> Hồ Sơ
+                        </Button>
 
-                <Button variant="outline-danger" onClick={handleLogout}>
-                    <BoxArrowRight /> Đăng xuất
-                </Button>
-            </div>
+                        <Button 
+                            variant="light" 
+                            className="fw-semibold text-danger"
+                            onClick={handleLogout}
+                            style={{borderRadius: '12px', padding: '10px 20px'}}
+                        >
+                            <BoxArrowRight className="me-1" size={18}/> Đăng xuất
+                        </Button>
+                    </div>
+                </div>
 
-            <Row className="mb-4 justify-content-center">
-                <Col md={8}>
-                    <InputGroup size="lg">
-                        <InputGroup.Text className="bg-white text-primary border-end-0"><Search /></InputGroup.Text>
-                        <Form.Control 
-                            placeholder="Tìm kiếm môn học..." 
-                            className="border-start-0 ps-0 shadow-sm"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </InputGroup>
-                </Col>
-            </Row>
+                {/* Search Bar - Modern design */}
+                <Row className="mb-5 justify-content-center">
+                    <Col md={8}>
+                        <InputGroup size="lg" style={{
+                            borderRadius: '16px',
+                            overflow: 'hidden',
+                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
+                        }}>
+                            <InputGroup.Text 
+                                className="bg-white border-0 ps-4"
+                                style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}
+                            >
+                                <Search size={22} style={{color: '#667eea'}}/>
+                            </InputGroup.Text>
+                            <Form.Control 
+                                placeholder="🔍 Tìm kiếm môn học..." 
+                                className="border-0 ps-3 pe-4"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{
+                                    fontSize: '1.05rem',
+                                    padding: '14px'
+                                }}
+                            />
+                        </InputGroup>
+                    </Col>
+                </Row>
 
-            {loading && <div className="text-center"><Spinner animation="border" variant="primary"/></div>}
+                {/* Loading spinner */}
+                {loading && (
+                    <div className="text-center py-5">
+                        <Spinner animation="border" style={{width: '3rem', height: '3rem', color: '#667eea'}}/>
+                        <p className="mt-3 text-muted fw-semibold">Đang tải danh sách môn học...</p>
+                    </div>
+                )}
 
-            {!loading && (
-                <Row>
-                    {filteredCourses.length === 0 ? (
-                        <div className="text-center text-muted mt-5"><h4>Không tìm thấy môn học nào.</h4></div>
-                    ) : (
-                        filteredCourses.map((course) => {
-                            const isEnrolled = myEnrolledIds.includes(course.courseId);
-                            const progress = myProgressMap[course.courseId] || 0; // Lấy % tiến độ
+                {!loading && (
+                    <Row>
+                        {filteredCourses.length === 0 ? (
+                            <div className="text-center text-muted mt-5">
+                                <Search size={60} style={{opacity: 0.3}}/>
+                                <h4 className="mt-3">Không tìm thấy môn học nào</h4>
+                                <p>Thử tìm kiếm với từ khóa khác</p>
+                            </div>
+                        ) : (
+                            filteredCourses.map((course) => {
+                                const isEnrolled = myEnrolledIds.includes(course.courseId);
+                                const progress = myProgressMap[course.courseId] || 0;
 
-                            return (
-                                <Col md={4} key={course.courseId} className="mb-4">
-                                    <Card className={`h-100 shadow-sm border-0 hover-card ${isEnrolled ? 'border-success' : ''}`}>
-                                        <div style={{ height: '180px', position: 'relative' }}>
-                                            <Card.Img 
-                                                variant="top" 
-                                                src={course.imageUrl || "https://via.placeholder.com/400x200?text=Subject"} 
-                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                                            />
-                                            {isEnrolled && (
-                                                <Badge bg="success" className="position-absolute top-0 end-0 m-2 p-2 shadow">
-                                                    <CheckCircleFill className="me-1"/> Đã Tham Gia
-                                                </Badge>
-                                            )}
-                                        </div>
-                                        
-                                        <Card.Body className="d-flex flex-column">
-                                            <Card.Title className="fw-bold text-dark text-truncate" title={course.title}>
-                                                {course.title}
-                                            </Card.Title>
-                                            
-                                            {/* HIỂN THỊ TIẾN ĐỘ NẾU ĐÃ HỌC */}
-                                            {isEnrolled && (
-                                                <div className="mb-2">
-                                                    <div className="d-flex justify-content-between small mb-1 text-muted">
-                                                        <span>Tiến độ hoàn thành</span>
-                                                        <span className="fw-bold text-success">{Math.round(progress)}%</span>
-                                                    </div>
-                                                    <ProgressBar now={progress} variant="success" size="sm" style={{height: '6px'}} />
-                                                </div>
-                                            )}
-
-                                            <Card.Text className="text-muted flex-grow-1 small text-truncate-2">
-                                                {course.description || "Chưa có mô tả môn học."}
-                                            </Card.Text>
-                                            
-                                            <div className="mt-3 pt-3 border-top">
-                                                {isEnrolled ? (
-                                                    <Button variant="success" className="w-100 fw-bold" onClick={() => navigate(`/student/courses/${course.courseId}`)}>
-                                                        <PlayCircle className="me-2"/> Vào Học Ngay
-                                                    </Button>
-                                                ) : (
-                                                    <Button variant="outline-primary" className="w-100 fw-bold" onClick={() => handleOpenJoinModal(course)}>
-                                                        <UnlockFill className="me-2"/> Tham Gia Môn Học
-                                                    </Button>
+                                return (
+                                    <Col md={4} key={course.courseId} className="mb-4">
+                                        <Card 
+                                            className="h-100 border-0"
+                                            style={{
+                                                borderRadius: '20px',
+                                                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                                                transition: 'all 0.3s',
+                                                overflow: 'hidden',
+                                                border: isEnrolled ? '3px solid #10b981' : 'none'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.transform = 'translateY(-8px)';
+                                                e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.15)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.transform = 'translateY(0)';
+                                                e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
+                                            }}
+                                        >
+                                            <div style={{ height: '200px', position: 'relative', overflow: 'hidden' }}>
+                                                <Card.Img 
+                                                    variant="top" 
+                                                    src={course.imageUrl || "https://via.placeholder.com/400x200?text=Subject"} 
+                                                    style={{ 
+                                                        width: '100%', 
+                                                        height: '100%', 
+                                                        objectFit: 'cover',
+                                                        transition: 'transform 0.3s'
+                                                    }} 
+                                                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                                                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)' }
+                                                />
+                                                {isEnrolled && (
+                                                    <Badge 
+                                                        className="position-absolute top-0 end-0 m-3"
+                                                        style={{
+                                                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                                            padding: '8px 14px',
+                                                            borderRadius: '10px',
+                                                            fontSize: '0.85rem',
+                                                            fontWeight: '600',
+                                                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)'
+                                                        }}>
+                                                        <CheckCircleFill className="me-1"/> Đã Tham Gia
+                                                    </Badge>
                                                 )}
                                             </div>
-                                        </Card.Body>
-                                        <Card.Footer className="bg-white text-muted small">
-                                            Giảng viên: <strong>{course.instructor?.fullName || "Teacher"}</strong>
-                                        </Card.Footer>
+                                        
+                                            <Card.Body className="d-flex flex-column p-4">
+                                                <Card.Title 
+                                                    className="fw-bold text-truncate mb-3" 
+                                                    title={course.title}
+                                                    style={{color: '#1f2937', fontSize: '1.2rem'}}
+                                                >
+                                                    {course.title}
+                                                </Card.Title>
+                                                
+                                                {/* Progress Bar - Hiện đại hơn */}
+                                                {isEnrolled && (
+                                                    <div className="mb-3 p-3" style={{background: '#f0fdf4', borderRadius: '12px'}}>
+                                                        <div className="d-flex justify-content-between mb-2">
+                                                            <span className="small fw-semibold" style={{color: '#059669'}}>Tiến độ hoàn thành</span>
+                                                            <span className="small fw-bold" style={{color: '#10b981'}}>{Math.round(progress)}%</span>
+                                                        </div>
+                                                        <div style={{
+                                                            background: '#d1fae5',
+                                                            borderRadius: '10px',
+                                                            height: '8px',
+                                                            overflow: 'hidden'
+                                                        }}>
+                                                            <div style={{
+                                                                width: `${progress}%`,
+                                                                height: '100%',
+                                                                background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+                                                                transition: 'width 0.5s',
+                                                                borderRadius: '10px'
+                                                            }}></div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <Card.Text className="text-muted flex-grow-1 mb-3" style={{fontSize: '0.9rem', lineHeight: '1.5'}}>
+                                                    {course.description || "Chưa có mô tả môn học."}
+                                                </Card.Text>
+                                                
+                                                <div className="mt-auto">
+                                                    {isEnrolled ? (
+                                                        <Button 
+                                                            className="w-100 fw-semibold border-0 text-white" 
+                                                            onClick={() => navigate(`/student/courses/${course.courseId}`)}
+                                                            style={{
+                                                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                                                borderRadius: '12px',
+                                                                padding: '12px',
+                                                                fontSize: '1rem',
+                                                                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                                                            }}
+                                                        >
+                                                            <PlayCircle className="me-2" size={18}/> Vào Học Ngay
+                                                        </Button>
+                                                    ) : (
+                                                        <Button 
+                                                            className="w-100 fw-semibold" 
+                                                            onClick={() => handleOpenJoinModal(course)}
+                                                            style={{
+                                                                background: 'transparent',
+                                                                border: '2px solid #667eea',
+                                                                color: '#667eea',
+                                                                borderRadius: '12px',
+                                                                padding: '12px',
+                                                                fontSize: '1rem',
+                                                                transition: 'all 0.3s'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.target.style.background = '#667eea';
+                                                                e.target.style.color = 'white';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.target.style.background = 'transparent';
+                                                                e.target.style.color = '#667eea';
+                                                            }}
+                                                        >
+                                                            <UnlockFill className="me-2" size={18}/> Tham Gia Môn Học
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </Card.Body>
+                                            <Card.Footer className="bg-white border-0 py-3 px-4" style={{borderTop: '1px solid #f3f4f6'}}>
+                                                <small className="text-muted">
+                                                    👨‍🏫 Giáo viên: <strong style={{color: '#667eea'}}>{course.instructor?.fullName || "Teacher"}</strong>
+                                                </small>
+                                            </Card.Footer>
                                     </Card>
                                 </Col>
                             );
@@ -183,31 +311,66 @@ const StudentDashboard = () => {
                 </Row>
             )}
 
+            {/* Modal Tham Gia - Redesign */}
             <Modal show={showJoinModal} onHide={() => setShowJoinModal(false)} centered>
-                <Modal.Header closeButton className="bg-primary text-white">
-                    <Modal.Title>Tham Gia: {selectedCourse?.title}</Modal.Title>
+                <Modal.Header closeButton className="border-0 text-white" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '24px'}}>
+                    <Modal.Title className="fw-bold" style={{fontSize: '1.3rem'}}>
+                        🔓 Tham Gia: {selectedCourse?.title}
+                    </Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body style={{padding: '32px', background: 'linear-gradient(135deg, #f5f7fa 0%, #e0e7ff 100%)'}}>
                     <Form>
                         <Form.Group>
-                            <Form.Label className="fw-bold">Nhập Mã Môn Học (Enrollment Key)</Form.Label>
-                            <Form.Text className="text-muted d-block mb-2">
-                                Liên hệ giáo viên <strong>{selectedCourse?.instructor?.fullName}</strong> để lấy mã.
+                            <Form.Label className="fw-bold mb-2" style={{color: '#667eea', fontSize: '1rem'}}>
+                                🔑 Nhập Mã Môn Học (Enrollment Key)
+                            </Form.Label>
+                            <Form.Text className="d-block mb-3" style={{color: '#6b7280'}}>
+                                Liên hệ giáo viên <strong style={{color: '#667eea'}}>{selectedCourse?.instructor?.fullName}</strong> để lấy mã tham gia.
                             </Form.Text>
                             <Form.Control 
-                                size="lg" type="text" placeholder="Ví dụ: JAVA_K18..." 
+                                size="lg" 
+                                type="text" 
+                                placeholder="Ví dụ: JAVA_K18..." 
                                 value={enrollmentKey}
                                 onChange={(e) => setEnrollmentKey(e.target.value.toUpperCase())}
-                                autoFocus className="text-center fw-bold text-primary letter-spacing-2"
+                                autoFocus 
+                                className="text-center fw-bold"
+                                style={{
+                                    borderRadius: '12px',
+                                    border: '2px solid #667eea',
+                                    padding: '16px',
+                                    fontSize: '1.2rem',
+                                    color: '#667eea',
+                                    letterSpacing: '2px'
+                                }}
                             />
                         </Form.Group>
                     </Form>
                 </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowJoinModal(false)}>Hủy</Button>
-                    <Button variant="primary" onClick={handleJoinSubmit}>Xác Nhận Tham Gia</Button>
+                <Modal.Footer style={{background: '#f5f7fa', borderTop: '2px solid #e0e7ff', padding: '20px 32px'}}>
+                    <Button 
+                        variant="secondary" 
+                        onClick={() => setShowJoinModal(false)}
+                        style={{borderRadius: '10px', padding: '10px 28px', fontWeight: '600'}}
+                    >
+                        Hủy
+                    </Button>
+                    <Button 
+                        onClick={handleJoinSubmit}
+                        className="text-white border-0"
+                        style={{
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            borderRadius: '10px',
+                            padding: '10px 32px',
+                            fontWeight: '600',
+                            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
+                        }}
+                    >
+                        ✅ Xác Nhận Tham Gia
+                    </Button>
                 </Modal.Footer>
             </Modal>
+            </Container>
         </Container>
     );
 };

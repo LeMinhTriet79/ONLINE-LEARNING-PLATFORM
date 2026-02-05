@@ -85,61 +85,117 @@ const StudentCourseDetail = () => {
         }
     };
 
-    if (loading) return <div className="text-center mt-5"><Spinner animation="border"/></div>;
+    if (loading) return (
+        <div className="d-flex justify-content-center align-items-center" style={{minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+            <div className="text-center">
+                <Spinner animation="border" style={{width: '3rem', height: '3rem', color: 'white'}}/>
+                <p className="text-white fw-bold mt-3">Đang tải khóa học...</p>
+            </div>
+        </div>
+    );
 
     return (
-        <Container fluid className="py-3 bg-light" style={{minHeight: '100vh'}}>
-            {/* Header nhỏ */}
-            <div className="d-flex align-items-center mb-3">
-                <Button variant="link" onClick={() => navigate('/student/dashboard')} className="text-decoration-none text-secondary">
-                    <ArrowLeft/> Quay lại
+        <Container fluid style={{minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', padding: '24px'}}>
+            {/* Header - Gradient design */}
+            <div className="d-flex align-items-center mb-4 p-3" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '16px', boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)'}}>
+                <Button 
+                    variant="light" 
+                    onClick={() => navigate('/student/dashboard')} 
+                    className="fw-semibold"
+                    style={{borderRadius: '10px', padding: '8px 20px'}}>
+                    <ArrowLeft className="me-1" size={16}/> Quay lại
                 </Button>
-                <h5 className="m-0 fw-bold text-primary ms-2">{course?.title}</h5>
+                <h4 className="m-0 fw-bold text-white ms-3" style={{textShadow: '0 2px 4px rgba(0,0,0,0.1)'}}>
+                    📚 {course?.title}
+                </h4>
             </div>
 
             <Row>
                 {/* CỘT TRÁI: MÀN HÌNH HỌC & NỘI DUNG */}
                 <Col md={8} className="mb-4">
                     {currentLesson ? (
-                        <Card className="shadow-sm border-0 h-100">
-                            {/* Màn hình Video */}
-                            <div className="bg-dark text-center ratio ratio-16x9">
+                        <Card className="border-0 h-100" style={{borderRadius: '20px', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'}}>
+                            {/* Màn hình Video - Bo tròn */}
+                            <div 
+                                className="text-center ratio ratio-16x9" 
+                                style={{
+                                    background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+                                    borderRadius: '20px 20px 0 0',
+                                    overflow: 'hidden'
+                                }}>
                                 {renderVideoPlayer(currentLesson.videoUrl)}
                             </div>
                             
-                            <Card.Body>
-                                <div className="d-flex justify-content-between align-items-center mb-3">
-                                    <h3 className="fw-bold m-0 text-dark">{currentLesson.title}</h3>
+                            <Card.Body style={{padding: '32px'}}>
+                                <div className="d-flex justify-content-between align-items-start mb-4">
+                                    <h3 className="fw-bold m-0" style={{color: '#1f2937'}}>{currentLesson.title}</h3>
                                     {currentLesson.attachmentUrl && (
-                                        <a href={currentLesson.attachmentUrl} target="_blank" rel="noreferrer" className="btn btn-outline-primary btn-sm">
-                                            <FileEarmarkText/> Tài liệu đính kèm
+                                        <a 
+                                            href={currentLesson.attachmentUrl} 
+                                            target="_blank" 
+                                            rel="noreferrer" 
+                                            className="btn fw-semibold text-white border-0"
+                                            style={{
+                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                borderRadius: '12px',
+                                                padding: '10px 20px',
+                                                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                            <FileEarmarkText className="me-2" size={16}/> Tài liệu
                                         </a>
                                     )}
                                 </div>
-                                <hr/>
+                                <hr style={{margin: '24px 0', borderColor: '#e5e7eb'}}/>
                                 
                                 {/* Nội dung bài học */}
-                                <div className="mb-4 text-secondary" dangerouslySetInnerHTML={{ __html: currentLesson.contentText?.replace(/\n/g, '<br/>') }} />
+                                <div 
+                                    className="mb-4" 
+                                    style={{color: '#4b5563', fontSize: '1rem', lineHeight: '1.8'}}
+                                    dangerouslySetInnerHTML={{ __html: currentLesson.contentText?.replace(/\n/g, '<br/>') }} 
+                                />
                                 
                                 {/* KHU VỰC BÀI TẬP */}
-                                <div className="p-4 bg-white rounded border border-light shadow-sm">
-                                    <h5 className="text-success fw-bold border-bottom pb-2 mb-3"><JournalCheck className="me-2"/> Bài Tập Thực Hành</h5>
+                                <div className="p-4" style={{background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', borderRadius: '16px', border: '2px solid #d1fae5'}}>
+                                    <h5 className="fw-bold mb-3" style={{color: '#059669', borderBottom: '2px solid #d1fae5', paddingBottom: '12px'}}>
+                                        <JournalCheck className="me-2" size={24}/> 📝 Bài Tập Thực Hành
+                                    </h5>
                                     
                                     {(!currentLesson.quizzes?.length && !currentLesson.assignments?.length) ? (
-                                        <span className="text-muted small">Chưa có bài tập nào.</span>
+                                        <div className="text-center py-3">
+                                            <span className="text-muted">Chưa có bài tập nào</span>
+                                        </div>
                                     ) : (
-                                        <div className="d-flex flex-wrap gap-2">
+                                        <div className="d-flex flex-wrap gap-3">
                                             {/* List Quiz */}
                                             {currentLesson.quizzes?.map(quiz => (
-                                                <Button key={quiz.quizId} variant="outline-success" onClick={() => {setSelectedItem(quiz); setShowQuizModal(true);}}>
-                                                    📝 Trắc Nghiệm: {quiz.title}
+                                                <Button 
+                                                    key={quiz.quizId} 
+                                                    className="fw-semibold text-white border-0"
+                                                    onClick={() => {setSelectedItem(quiz); setShowQuizModal(true);}}
+                                                    style={{
+                                                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                                        borderRadius: '12px',
+                                                        padding: '12px 20px',
+                                                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                                                    }}>
+                                                    ❓ Trắc Nghiệm: {quiz.title}
                                                 </Button>
                                             ))}
                                             
                                             {/* List Assignment */}
                                             {currentLesson.assignments?.map(assign => (
-                                                <Button key={assign.assignmentId} variant="outline-warning" className="text-dark" onClick={() => {setSelectedItem(assign); setShowAssignModal(true);}}>
-                                                    📤 Tự Luận: {assign.title}
+                                                <Button 
+                                                    key={assign.assignmentId} 
+                                                    className="fw-semibold text-white border-0"
+                                                    onClick={() => {setSelectedItem(assign); setShowAssignModal(true);}}
+                                                    style={{
+                                                        background: 'linear-gradient(135deg, #fb923c 0%, #f59e0b 100%)',
+                                                        borderRadius: '12px',
+                                                        padding: '12px 20px',
+                                                        boxShadow: '0 4px 12px rgba(251, 146, 60, 0.3)'
+                                                    }}>
+                                                    📝 Tự Luận: {assign.title}
                                                 </Button>
                                             ))}
                                         </div>
@@ -148,24 +204,36 @@ const StudentCourseDetail = () => {
                             </Card.Body>
                         </Card>
                     ) : (
-                        <div className="text-center mt-5 p-5 bg-white rounded shadow-sm">
-                            <h4>Chọn một bài học bên phải để bắt đầu.</h4>
+                        <div className="text-center p-5 bg-white" style={{borderRadius: '20px', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)'}}>
+                            <div style={{fontSize: '4rem', marginBottom: '16px'}}>📚</div>
+                            <h4 style={{color: '#6b7280'}}>Chọn một bài học bên phải để bắt đầu</h4>
                         </div>
                     )}
                 </Col>
 
                 {/* CỘT PHẢI: DANH SÁCH BÀI HỌC (MENU) */}
                 <Col md={4}>
-                    <Card className="shadow-sm border-0 h-100">
-                        <Card.Header className="bg-white fw-bold py-3 border-bottom text-primary">Nội Dung Khóa Học</Card.Header>
-                        <Card.Body className="p-0 overflow-auto" style={{maxHeight: '80vh'}}>
+                    <Card className="border-0 h-100" style={{borderRadius: '20px', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'}}>
+                        <Card.Header 
+                            className="fw-bold py-3 border-0 text-white"
+                            style={{
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                borderRadius: '20px 20px 0 0',
+                                padding: '20px 24px',
+                                fontSize: '1.1rem'
+                            }}>
+                            📑 Nội Dung Khóa Học
+                        </Card.Header>
+                        <Card.Body className="p-0 overflow-auto" style={{maxHeight: '80vh', background: '#ffffff'}}>
                             <Accordion defaultActiveKey="0" flush>
                                 {course?.chapters?.sort((a,b)=>a.orderIndex-b.orderIndex).map((chapter, idx) => (
                                     <Accordion.Item eventKey={idx.toString()} key={chapter.chapterId}>
-                                        <Accordion.Header>
-                                            <strong>Chương {idx + 1}: {chapter.title}</strong>
+                                        <Accordion.Header style={{background: '#f9fafb'}}>
+                                            <strong style={{color: '#667eea', fontSize: '1rem'}}>
+                                                📖 Chương {idx + 1}: {chapter.title}
+                                            </strong>
                                         </Accordion.Header>
-                                        <Accordion.Body className="p-0">
+                                        <Accordion.Body className="p-0" style={{background: '#f9fafb'}}>
                                             <ListGroup variant="flush">
                                                 {chapter.lessons?.sort((a,b)=>a.orderIndex-b.orderIndex).map(lesson => (
                                                     <ListGroup.Item 
@@ -174,13 +242,44 @@ const StudentCourseDetail = () => {
                                                         active={currentLesson?.lessonId === lesson.lessonId}
                                                         onClick={() => {setCurrentLesson(lesson); window.scrollTo(0,0);}}
                                                         className="d-flex align-items-center border-0 py-3"
+                                                        style={{
+                                                            cursor: 'pointer',
+                                                            background: currentLesson?.lessonId === lesson.lessonId 
+                                                                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                                                                : 'transparent',
+                                                            color: currentLesson?.lessonId === lesson.lessonId ? 'white' : '#4b5563',
+                                                            transition: 'all 0.2s',
+                                                            padding: '12px 20px'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            if(currentLesson?.lessonId !== lesson.lessonId) {
+                                                                e.currentTarget.style.background = '#e0e7ff';
+                                                            }
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            if(currentLesson?.lessonId !== lesson.lessonId) {
+                                                                e.currentTarget.style.background = 'transparent';
+                                                            }
+                                                        }}
                                                     >
-                                                        <div className="me-2 text-secondary"><Film/></div>
-                                                        <div className="flex-grow-1 small fw-bold">{lesson.title}</div>
+                                                        <div className="me-2"><Film size={18}/></div>
+                                                        <div className="flex-grow-1 fw-semibold" style={{fontSize: '0.95rem'}}>{lesson.title}</div>
                                                         {/* Badge báo bài tập */}
-                                                        {(lesson.quizzes?.length > 0 || lesson.assignments?.length > 0) && 
-                                                            <Badge bg="danger" pill className="ms-1 small" title="Có bài tập">BT</Badge>
-                                                        }
+                                                        {(lesson.quizzes?.length > 0 || lesson.assignments?.length > 0) && (
+                                                            <Badge 
+                                                                pill 
+                                                                className="ms-2" 
+                                                                title="Có bài tập"
+                                                                style={{
+                                                                    background: currentLesson?.lessonId === lesson.lessonId ? '#fbbf24' : '#ef4444',
+                                                                    color: '#1f2937',
+                                                                    padding: '4px 10px',
+                                                                    fontSize: '0.75rem',
+                                                                    fontWeight: '600'
+                                                                }}>
+                                                                BT
+                                                            </Badge>
+                                                        )}
                                                     </ListGroup.Item>
                                                 ))}
                                             </ListGroup>
