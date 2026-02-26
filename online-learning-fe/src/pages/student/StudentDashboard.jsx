@@ -12,6 +12,7 @@ const StudentDashboard = () => {
     const [myEnrolledIds, setMyEnrolledIds] = useState([]); // Lưu ID các môn đã học
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
+    const [student, setStudent] = useState(null);
     
     // State Modal nhập Key
     const [showJoinModal, setShowJoinModal] = useState(false);
@@ -51,7 +52,17 @@ const StudentDashboard = () => {
         }
     };
 
-    useEffect(() => { fetchData(); }, []);
+    const fetchStudentProfile = async () => {
+        try {
+            const res = await axiosClient.get('/user/profile');
+            if (res.data.status) setStudent(res.data.data);
+        } catch (error) { console.error("Lỗi tải profile"); }
+    };
+
+    useEffect(() => { 
+        fetchData();
+        fetchStudentProfile();
+    }, []);
 
     // 2. Mở Modal tham gia
     const handleOpenJoinModal = (course) => {
@@ -89,7 +100,7 @@ const StudentDashboard = () => {
         <Container fluid className="py-4" style={{minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'}}>
             <Container>
                 {/* Header - Gradient design */}
-                <div className="d-flex justify-content-between align-items-center mb-5 p-4"
+                <div className="d-flex justify-content-between align-items-center mb-4 p-4"
                      style={{
                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                          borderRadius: '20px',
@@ -100,23 +111,101 @@ const StudentDashboard = () => {
                         📚 Góc Học Tập
                     </h2>
 
-                    <div>
+                    <div className="d-flex align-items-center gap-3">
+                        {/* Student Avatar + Name */}
+                        {student && (
+                            <div 
+                                className="d-flex align-items-center gap-3 px-3 py-2"
+                                onClick={() => navigate('/profile')}
+                                style={{
+                                    background: 'rgba(255, 255, 255, 0.15)',
+                                    backdropFilter: 'blur(10px)',
+                                    borderRadius: '16px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s',
+                                    border: '2px solid rgba(255, 255, 255, 0.2)'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                }}>
+                                <div className="position-relative">
+                                    {student.avatarUrl ? (
+                                        <img 
+                                            src={student.avatarUrl} 
+                                            alt="Student Avatar"
+                                            style={{
+                                                width: '48px',
+                                                height: '48px',
+                                                borderRadius: '12px',
+                                                objectFit: 'cover',
+                                                border: '3px solid white',
+                                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                                            }}
+                                        />
+                                    ) : (
+                                        <div style={{
+                                            width: '48px',
+                                            height: '48px',
+                                            borderRadius: '12px',
+                                            background: 'white',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            border: '3px solid white',
+                                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                                        }}>
+                                            <PersonCircle size={32} style={{color: '#667eea'}} />
+                                        </div>
+                                    )}
+                                    <div style={{
+                                        position: 'absolute',
+                                        bottom: '-2px',
+                                        right: '-2px',
+                                        width: '16px',
+                                        height: '16px',
+                                        borderRadius: '50%',
+                                        background: '#10b981',
+                                        border: '3px solid white'
+                                    }}></div>
+                                </div>
+                                <div>
+                                    <div className="text-white fw-bold" style={{fontSize: '1rem', lineHeight: '1.2'}}>
+                                        {student.fullName}
+                                    </div>
+                                    <div style={{fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.8)'}}>
+                                        @{student.username}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {/* Logout Button */}
                         <Button 
-                            variant="light" 
-                            className="me-2 fw-semibold"
-                            onClick={() => navigate('/profile')}
-                            style={{borderRadius: '12px', padding: '10px 20px'}}
-                        >
-                            <PersonCircle className="me-1" size={18}/> Hồ Sơ
-                        </Button>
-
-                        <Button 
-                            variant="light" 
-                            className="fw-semibold text-danger"
+                            className="fw-semibold"
                             onClick={handleLogout}
-                            style={{borderRadius: '12px', padding: '10px 20px'}}
-                        >
-                            <BoxArrowRight className="me-1" size={18}/> Đăng xuất
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.15)',
+                                backdropFilter: 'blur(10px)',
+                                color: 'white',
+                                border: '2px solid rgba(255, 255, 255, 0.2)',
+                                borderRadius: '12px',
+                                padding: '10px 20px',
+                                transition: 'all 0.3s'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#dc2626';
+                                e.currentTarget.style.border = '2px solid #dc2626';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                                e.currentTarget.style.border = '2px solid rgba(255, 255, 255, 0.2)';
+                            }}>
+                            <BoxArrowRight className="me-2" size={18}/> Đăng xuất
                         </Button>
                     </div>
                 </div>

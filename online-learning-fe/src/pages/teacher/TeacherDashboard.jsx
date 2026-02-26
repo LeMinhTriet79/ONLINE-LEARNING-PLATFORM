@@ -113,7 +113,7 @@ const TeacherDashboard = () => {
                     <div className="d-flex justify-content-between align-items-center">
                         {/* Left: Title */}
                         <h2 className="text-white fw-bold m-0" style={{textShadow: '0 2px 4px rgba(0,0,0,0.1)'}}>
-                            <JournalBookmarkFill className="me-2" size={28}/> 🏛️ Quản Lý Khóa Học
+                            <JournalBookmarkFill className="me-2" size={28}/> 🏛️ Quản Lý Môn Học
                         </h2>
                         
                         {/* Right: Teacher Info + Logout */}
@@ -221,10 +221,10 @@ const TeacherDashboard = () => {
                 <div className="mb-4 d-flex justify-content-between align-items-center">
                     <div>
                         <h5 className="fw-bold mb-1" style={{color: '#1f2937'}}>
-                            📚 Danh Sách Khóa Học
+                            📚 Danh Sách Môn Học
                         </h5>
                         <p className="text-muted mb-0" style={{fontSize: '0.9rem'}}>
-                            Quản lý và tổ chức các khóa học của bạn
+                            Quản lý và tổ chức các môn học của bạn
                         </p>
                     </div>
                     <Button 
@@ -253,7 +253,7 @@ const TeacherDashboard = () => {
                 {loading && (
                     <div className="text-center py-5">
                         <Spinner animation="border" style={{width: '3rem', height: '3rem', color: '#667eea'}}/>
-                        <p className="mt-3 text-muted fw-semibold">Đang tải danh sách khóa học...</p>
+                        <p className="mt-3 text-muted fw-semibold">Đang tải danh sách môn học...</p>
                     </div>
                 )}
 
