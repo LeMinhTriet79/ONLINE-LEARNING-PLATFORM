@@ -1,6 +1,7 @@
 package com.swd.online_learning.controller;
 
 import com.swd.online_learning.dto.ApiResponse;
+import com.swd.online_learning.dto.request.AiHintRequest;
 import com.swd.online_learning.dto.request.AssignmentSubmissionRequest;
 import com.swd.online_learning.dto.request.QuizSubmissionRequest;
 import com.swd.online_learning.dto.response.QuizResultResponse;
@@ -8,6 +9,7 @@ import com.swd.online_learning.entity.Course;
 import com.swd.online_learning.entity.Enrollment;
 import com.swd.online_learning.entity.Lesson;
 import com.swd.online_learning.entity.Submission;
+import com.swd.online_learning.service.AiService;
 import com.swd.online_learning.service.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,7 @@ import java.util.List;
 public class StudentController {
 
     private final StudentService studentService;
+    private final AiService aiService;
 
     // API MỚI: Lấy danh sách tất cả khóa học (Catalog)
     @GetMapping("/all-courses")
@@ -107,5 +110,16 @@ public class StudentController {
     public ResponseEntity<ApiResponse<Void>> deleteSubmission(@PathVariable Long submissionId, @AuthenticationPrincipal UserDetails userDetails) {
         studentService.deleteSubmission(submissionId, userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success(null, "Deleted"));
+    }
+
+    @PostMapping("/quiz/help")
+    public ResponseEntity<ApiResponse<String>> askAiForHint(
+            @RequestBody AiHintRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        // Gọi AI Service để lấy câu trả lời
+        String aiResponse = aiService.getQuizHint(request.getQuestionContent(), request.getStudentQuery());
+
+        return ResponseEntity.ok(ApiResponse.success(aiResponse, "AI generated hint successfully"));
     }
 }
