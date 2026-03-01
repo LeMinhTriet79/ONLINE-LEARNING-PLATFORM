@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Badge, InputGroup, Spinner } from 'react-bootstrap';
-// Import Icon
 import { CheckCircleFill, XCircleFill, ArrowRepeat, Robot, SendFill, XLg } from 'react-bootstrap-icons';
 import axiosClient from '../../api/axiosClient';
 import { toast } from 'react-toastify';
@@ -11,16 +10,38 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
     const [viewMode, setViewMode] = useState('DOING'); 
 
     // --- STATE CHO AI TUTOR ---
-    const [activeAiQuestion, setActiveAiQuestion] = useState(null); // ID câu hỏi đang mở chat AI
-    const [aiQuery, setAiQuery] = useState(''); // Text học sinh nhập
-    const [aiResponse, setAiResponse] = useState(''); // Text AI trả lời
-    const [isAiLoading, setIsAiLoading] = useState(false); // Trạng thái loading API Gemini
+    const [activeAiQuestion, setActiveAiQuestion] = useState(null); 
+    const [aiQuery, setAiQuery] = useState(''); 
+    const [aiResponse, setAiResponse] = useState(''); 
+    const [isAiLoading, setIsAiLoading] = useState(false); 
+
+    // --- BỘ LỌC MA THUẬT: HIỂN THỊ TOÁN HỌC & MARKDOWN ---
+    const renderHTML = (text) => {
+        if (!text) return { __html: "" };
+        
+        // 1. Chống XSS và bảo vệ các dấu < > trong công thức
+        let formatted = text.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        }[tag] || tag));
+
+        // 2. Dịch ký hiệu Toán/Lý cơ bản & Markdown của AI
+        formatted = formatted
+            .replace(/\$\\Omega\$/g, 'Ω')
+            .replace(/\\Omega/g, 'Ω')
+            .replace(/\$\\alpha\$/g, 'α')
+            .replace(/\$\\beta\$/g, 'β')
+            .replace(/\$\\pi\$/g, 'π')
+            .replace(/\$(.*?)\$/g, '$1') // Lọc sạch các dấu $ thừa
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // In đậm (Markdown)
+            .replace(/\n/g, '<br/>'); // Xuống dòng
+
+        return { __html: formatted };
+    };
 
     useEffect(() => {
         if (show && quiz) {
             fetchHistory();
             setAnswers({});
-            // Reset AI state khi mở bài mới
             setActiveAiQuestion(null);
             setAiQuery('');
             setAiResponse('');
@@ -66,15 +87,13 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
     const handleRetake = () => {
         setAnswers({});
         setViewMode('DOING');
-        setActiveAiQuestion(null); // Tắt chat AI khi làm lại
+        setActiveAiQuestion(null);
     };
 
-    // --- LOGIC GỌI API GEMINI AI ---
     const handleAskAi = async (question) => {
         if (!aiQuery.trim()) return;
         setIsAiLoading(true);
         
-        // Gom nội dung câu hỏi và các lựa chọn để gửi làm ngữ cảnh cho AI
         const optionsText = question.options.map((o, i) => `${i + 1}. ${o.content}`).join(' | ');
         const questionContext = `Câu hỏi: ${question.content} \nCác lựa chọn: ${optionsText}`;
 
@@ -85,7 +104,7 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
             });
             if (res.data.status) {
                 setAiResponse(res.data.data);
-                setAiQuery(''); // Xóa text input sau khi hỏi xong
+                setAiQuery(''); 
             }
         } catch (error) {
             toast.error("AI Gia sư đang bận, vui lòng thử lại sau!");
@@ -96,26 +115,18 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
 
     const toggleAiChat = (questionId) => {
         if (activeAiQuestion === questionId) {
-            setActiveAiQuestion(null); // Đóng nếu đang mở
+            setActiveAiQuestion(null);
         } else {
-            setActiveAiQuestion(questionId); // Mở câu hỏi mới
-            setAiResponse(''); // Xóa câu trả lời cũ
+            setActiveAiQuestion(questionId);
+            setAiResponse(''); 
             setAiQuery('');
         }
     };
 
-    // --- LOGIC MÀU SẮC CHO OPTION ---
     const getOptionStyle = (qId, option, isSelected) => {
         if (viewMode !== 'REVIEW') return {};
-        
-        if (option.isCorrect) {
-            return { backgroundColor: '#d1e7dd', border: '1px solid #198754' }; // Xanh lá
-        }
-
-        if (isSelected && !option.isCorrect) {
-            return { backgroundColor: '#f8d7da', border: '1px solid #dc3545' }; // Đỏ
-        }
-
+        if (option.isCorrect) return { backgroundColor: '#d1e7dd', border: '1px solid #198754' };
+        if (isSelected && !option.isCorrect) return { backgroundColor: '#f8d7da', border: '1px solid #dc3545' };
         return {};
     };
 
@@ -173,8 +184,9 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
                     <div key={q.questionId} className="mb-4 p-4 bg-white position-relative"
                         style={{ borderRadius: '16px', border: '2px solid #d1fae5', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)' }}>
                         
+                        {/* HIỂN THỊ CÂU HỎI QUA BỘ LỌC renderHTML */}
                         <h6 className="fw-bold mb-3 pb-2" style={{color: '#059669', fontSize: '1.1rem', borderBottom: '2px solid #f0fdf4'}}>
-                            ❓ Câu {index + 1}: {q.content}
+                            ❓ Câu {index + 1}: <span dangerouslySetInnerHTML={renderHTML(q.content)} />
                         </h6>
 
                         <div className="mt-3">
@@ -198,7 +210,8 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
                                     >
                                         <Form.Check 
                                             type="radio"
-                                            label={opt.content}
+                                            // HIỂN THỊ ĐÁP ÁN QUA BỘ LỌC renderHTML
+                                            label={<span dangerouslySetInnerHTML={renderHTML(opt.content)} />}
                                             name={`question-${q.questionId}`}
                                             checked={viewMode === 'DOING' ? answers[q.questionId] == opt.optionId : !!isSelected}
                                             disabled={viewMode === 'REVIEW'} 
@@ -238,15 +251,13 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
                                             <h6 className="m-0 fw-bold" style={{ color: '#4f46e5' }}>Gia sư Gemini</h6>
                                         </div>
                                         
-                                        {/* Hiển thị kết quả AI trả về */}
+                                        {/* HIỂN THỊ KẾT QUẢ AI QUA BỘ LỌC renderHTML */}
                                         {aiResponse && (
                                             <div className="mb-3 p-3 bg-white" style={{ borderRadius: '10px', fontSize: '0.95rem', borderLeft: '4px solid #6366f1', color: '#334155', lineHeight: '1.6' }}>
-                                                {/* Dùng dangerouslySetInnerHTML để render xuống dòng (replace \n -> <br/>) */}
-                                                <div dangerouslySetInnerHTML={{ __html: aiResponse.replace(/\n/g, '<br/>') }} />
+                                                <div dangerouslySetInnerHTML={renderHTML(aiResponse)} />
                                             </div>
                                         )}
 
-                                        {/* Input đặt câu hỏi cho AI */}
                                         <InputGroup className="mt-2" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: '8px', overflow: 'hidden' }}>
                                             <Form.Control 
                                                 placeholder="Ví dụ: Giảng lại cho em khái niệm này với..." 
@@ -276,8 +287,6 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
                                 )}
                             </div>
                         )}
-                        {/* --- KẾT THÚC KHU VỰC AI TUTOR --- */}
-
                     </div>
                 ))}
             </Modal.Body>
