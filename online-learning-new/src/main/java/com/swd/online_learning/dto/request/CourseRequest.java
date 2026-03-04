@@ -7,5 +7,5 @@ public class CourseRequest {
     private String title;
     private String description;
     private String imageUrl;
-    private String enrollmentKey;
+    //private String enrollmentKey;
 }

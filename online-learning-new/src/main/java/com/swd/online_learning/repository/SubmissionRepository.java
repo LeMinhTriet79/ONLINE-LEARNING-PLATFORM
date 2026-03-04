@@ -20,7 +20,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     Optional<Submission> findLatestAssignmentSubmission(Long enrollmentId, Long assignmentId);
 
     // QUAN TRỌNG: Câu lệnh tìm bài cần chấm cho Giáo Viên
-    @Query("SELECT s FROM Submission s WHERE s.status = 'PENDING' AND s.enrollment.course.instructor.username = :username")
+    @Query("SELECT s FROM Submission s WHERE s.status = 'PENDING' AND s.enrollment.classRoom.course.instructor.username = :username")
     List<Submission> findPendingSubmissionsByInstructor(String username);
 
     // QUAN TRỌNG: Câu lệnh tính tiến độ (Đếm số bài có điểm >= 5.0)
@@ -47,7 +47,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     void deleteByEnrollment(Enrollment enrollment);
 
     @Query("SELECT s FROM Submission s " +
-            "WHERE s.enrollment.course.courseId = :courseId " +
+            "WHERE s.enrollment.classRoom.course.courseId = :courseId " +
             "AND s.status = 'PENDING'")
     List<Submission> findPendingSubmissionsByCourse(Long courseId);
 }
