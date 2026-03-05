@@ -15,8 +15,7 @@ const TeacherDashboard = () => {
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [currentId, setCurrentId] = useState(null);
-    // ĐÃ XÓA enrollmentKey khỏi state mặc định
-    const [formData, setFormData] = useState({ title: '', description: '', imageUrl: '' });
+    const [formData, setFormData] = useState({ title: '', description: '', imageUrl: '', enrollmentKey: '' });
 
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
@@ -67,22 +66,21 @@ const TeacherDashboard = () => {
             setFormData({ 
                 title: course.title, 
                 description: course.description || '', 
-                imageUrl: course.imageUrl || ''
-                // Đã xóa lấy enrollmentKey từ course
+                imageUrl: course.imageUrl || '',
+                enrollmentKey: course.enrollmentKey || ''
             });
         } else {
             setIsEditing(false);
             setCurrentId(null);
-            // Đã xóa tạo enrollmentKey ngẫu nhiên
-            setFormData({ title: '', description: '', imageUrl: '' });
+            const randomKey = "COURSE_" + Math.floor(1000 + Math.random() * 9000);
+            setFormData({ title: '', description: '', imageUrl: '', enrollmentKey: randomKey });
         }
         setShowModal(true);
     };
 
     const handleSubmit = async () => {
-        // Đã xóa điều kiện check enrollmentKey
-        if (!formData.title) { 
-            toast.warning("Vui lòng nhập tên khóa học!"); return; 
+        if (!formData.title || !formData.enrollmentKey) { 
+            toast.warning("Vui lòng nhập tên và mã tham gia!"); return; 
         }
         try {
             if (isEditing) {
@@ -313,9 +311,21 @@ const TeacherDashboard = () => {
                                         <Card.Title className="fw-bold text-truncate mb-3" style={{color: '#1f2937', fontSize: '1.2rem'}}>
                                             {course.title}
                                         </Card.Title>
-                                        
-                                        {/* Đã xóa Badge hiển thị EnrollmentKey ở đây, vì Key giờ nằm ở lớp học (CourseDetail) */}
-                                        
+                                        <div className="mb-3">
+                                            <Badge 
+                                                className="p-2"
+                                                style={{
+                                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: '600',
+                                                    borderRadius: '8px'
+                                                }}
+                                                onClick={() => {navigator.clipboard.writeText(course.enrollmentKey); toast.success("Đã copy mã!");}}
+                                                title="Click để copy mã">
+                                                <Key className="me-1" size={14}/> Mã: {course.enrollmentKey}
+                                            </Badge>
+                                        </div>
                                         <Card.Text className="text-muted flex-grow-1 mb-3" style={{fontSize: '0.9rem', lineHeight: '1.5'}}>
                                             {course.description || "Chưa có mô tả."}
                                         </Card.Text>
@@ -329,7 +339,7 @@ const TeacherDashboard = () => {
                                                     padding: '12px',
                                                     boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                                                 }}>
-                                                📝 Vào Soạn Bài / Quản lý lớp
+                                                📝 Vào Soạn Bài
                                             </Button>
                                             <div className="d-flex gap-2">
                                                 <Button 
@@ -387,9 +397,23 @@ const TeacherDashboard = () => {
                                     }}
                                 />
                             </Form.Group>
-                            
-                            {/* ĐÃ XÓA Ô NHẬP MÃ THAM GIA Ở ĐÂY VÌ NÓ THUỘC VỀ LỚP HỌC */}
-
+                            <Form.Group className="mb-4">
+                                <Form.Label className="fw-bold mb-2" style={{color: '#667eea'}}>🔑 Mã tham gia (Key)</Form.Label>
+                                <Form.Control 
+                                    value={formData.enrollmentKey} 
+                                    onChange={e => setFormData({...formData, enrollmentKey: e.target.value.toUpperCase()})}
+                                    placeholder="VD: JAVA_K18" 
+                                    className="fw-bold"
+                                    size="lg"
+                                    style={{
+                                        borderRadius: '12px',
+                                        border: '2px solid #667eea',
+                                        padding: '12px 16px',
+                                        color: '#667eea',
+                                        letterSpacing: '1px'
+                                    }}
+                                />
+                            </Form.Group>
                             <Form.Group className="mb-4">
                                 <Form.Label className="fw-bold mb-2" style={{color: '#667eea'}}>🖼️ Ảnh bìa</Form.Label>
                                 <InputGroup size="lg" className="mb-2">

@@ -94,15 +94,10 @@ const GradingDashboard = () => {
                                 <tbody>
                                     {submissions.map(sub => (
                                         <tr key={sub.submissionId} style={{transition: 'background 0.2s'}}>
-                                            <td className="ps-4 py-3">
-                                                <div className="fw-bold" style={{color: '#1f2937'}}>{sub.enrollment?.student?.fullName}</div>
-                                                {/* ĐÃ THÊM TÊN LỚP VÀO ĐÂY */}
-                                                <small className="text-primary fw-bold">Lớp: {sub.enrollment?.classRoom?.className || 'N/A'}</small>
-                                            </td>
+                                            <td className="ps-4 py-3 fw-bold" style={{color: '#1f2937'}}>{sub.enrollment?.student?.fullName}</td>
                                             <td className="py-3">
                                                 <div className="fw-bold mb-1" style={{color: '#667eea'}}>{sub.assignment?.title}</div>
-                                                {/* ĐÃ SỬA ĐƯỜNG DẪN COURSE VÀO ĐÂY */}
-                                                <small className="text-muted">{sub.enrollment?.classRoom?.course?.title}</small>
+                                                <small className="text-muted">{sub.enrollment?.course?.title}</small>
                                             </td>
                                             <td className="py-3">
                                                 {sub.attachmentUrl ? (
@@ -167,8 +162,7 @@ const GradingDashboard = () => {
                             padding: '24px'
                         }}>
                         <Modal.Title className="fw-bold" style={{fontSize: '1.3rem'}}>
-                            {/* ĐÃ THÊM TÊN LỚP VÀO TIÊU ĐỀ MODAL */}
-                            ✅ Chấm Bài: {currentSub?.enrollment?.student?.fullName} {currentSub?.enrollment?.classRoom ? `(${currentSub.enrollment.classRoom.className})` : ''}
+                            ✅ Chấm Bài: {currentSub?.enrollment?.student?.fullName}
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body style={{padding: '32px', background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)'}}>

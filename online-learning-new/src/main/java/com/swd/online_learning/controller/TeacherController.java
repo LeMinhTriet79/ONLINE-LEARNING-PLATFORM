@@ -134,4 +134,21 @@ public class TeacherController {
     public ResponseEntity<ApiResponse<List<Submission>>> getCoursePendingSubmissions(@PathVariable Long courseId) {
         return ResponseEntity.ok(ApiResponse.success(teacherService.getCoursePendingSubmissions(courseId), "Fetched pending submissions"));
     }
+
+    // --- QUẢN LÝ CLASSROOM ---
+    @PostMapping("/courses/{courseId}/classes")
+    public ResponseEntity<ApiResponse<ClassRoom>> createClassRoom(@PathVariable Long courseId, @RequestBody ClassRoomRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.createClassRoom(courseId, request), "Created Class"));
+    }
+
+    @PutMapping("/classes/{classId}")
+    public ResponseEntity<ApiResponse<ClassRoom>> updateClassRoom(@PathVariable Long classId, @RequestBody ClassRoomRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(teacherService.updateClassRoom(classId, request), "Updated Class"));
+    }
+
+    @DeleteMapping("/classes/{classId}")
+    public ResponseEntity<ApiResponse<Void>> deleteClassRoom(@PathVariable Long classId) {
+        teacherService.deleteClassRoom(classId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Deleted Class"));
+    }
 }

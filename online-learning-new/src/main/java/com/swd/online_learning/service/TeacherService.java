@@ -36,4 +36,9 @@ public interface TeacherService {
 
     List<Enrollment> getCourseStudents(Long courseId); // Lấy DS học sinh
     List<Submission> getCoursePendingSubmissions(Long courseId); // Lấy bài cần chấm của khóa đó
+
+    // --- QUẢN LÝ LỚP HỌC (CLASSROOM) ---
+    ClassRoom createClassRoom(Long courseId, ClassRoomRequest request);
+    ClassRoom updateClassRoom(Long classId, ClassRoomRequest request);
+    void deleteClassRoom(Long classId);
 }

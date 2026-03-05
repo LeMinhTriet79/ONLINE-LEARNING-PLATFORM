@@ -27,27 +27,28 @@ const StudentDashboard = () => {
                 axiosClient.get('/student/all-courses'), // Lấy tất cả môn
                 axiosClient.get('/student/my-courses')   // Lấy danh sách Enrollment (chứa %)
             ]);
+
             if (resAll.data.status) setAllCourses(resAll.data.data);
             
             if (resMy.data.status) {
+                // Xử lý dữ liệu Enrollment trả về
                 const enrollments = resMy.data.data;
-                // SỬA LỖI Ở ĐÂY: Xuyên qua classRoom để lấy courseId
-                const ids = enrollments.map(e => e.classRoom?.course?.courseId).filter(id => id != null);
+                
+                // 1. Lấy danh sách ID đã học
+                const ids = enrollments.map(e => e.course.courseId);
                 setMyEnrolledIds(ids);
 
-                // SỬA LỖI Ở ĐÂY: Xuyên qua classRoom để lấy courseId
+                // 2. Map tiến độ vào object để dễ tra cứu { 101: 45.5, 102: 80.0 }
                 const progress = {};
                 enrollments.forEach(e => {
-                    if (e.classRoom && e.classRoom.course) {
-                        progress[e.classRoom.course.courseId] = e.progressPercent;
-                    }
+                    progress[e.course.courseId] = e.progressPercent;
                 });
                 setMyProgressMap(progress);
             }
         } catch (error) { 
             console.error("Lỗi tải dữ liệu");
         } finally { 
-            setLoading(false);
+            setLoading(false); 
         }
     };
 
@@ -72,16 +73,16 @@ const StudentDashboard = () => {
 
     // 3. Xử lý Enroll
     const handleJoinSubmit = async () => {
-        if (!enrollmentKey) { toast.warning("Vui lòng nhập mã lớp học!"); return; }
+        if (!enrollmentKey) { toast.warning("Vui lòng nhập mã môn học!"); return; }
         try {
             const res = await axiosClient.post(`/student/courses/${selectedCourse.courseId}/enroll?key=${enrollmentKey}`);
             if (res.data.status) {
                 toast.success(`Chào mừng bạn đến với môn ${selectedCourse.title}!`);
                 setShowJoinModal(false);
-                fetchData(); // Load lại để cập nhật trạng thái đã tham gia
+                fetchData(); // Load lại để cập nhật trạng thái
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || "Mã tham gia không đúng hoặc lớp không tồn tại!");
+            toast.error(error.response?.data?.message || "Mã môn học không đúng!");
         }
     };
 
@@ -391,13 +392,13 @@ const StudentDashboard = () => {
                                                     👨‍🏫 Giáo viên: <strong style={{color: '#667eea'}}>{course.instructor?.fullName || "Teacher"}</strong>
                                                 </small>
                                             </Card.Footer>
-                                        </Card>
-                                    </Col>
-                                );
-                            })
-                        )}
-                    </Row>
-                )}
+                                    </Card>
+                                </Col>
+                            );
+                        })
+                    )}
+                </Row>
+            )}
 
             {/* Modal Tham Gia - Redesign */}
             <Modal show={showJoinModal} onHide={() => setShowJoinModal(false)} centered>
@@ -410,15 +411,15 @@ const StudentDashboard = () => {
                     <Form>
                         <Form.Group>
                             <Form.Label className="fw-bold mb-2" style={{color: '#667eea', fontSize: '1rem'}}>
-                                🔑 Nhập Mã Lớp Học (Enrollment Key)
+                                🔑 Nhập Mã Môn Học (Enrollment Key)
                             </Form.Label>
                             <Form.Text className="d-block mb-3" style={{color: '#6b7280'}}>
-                                Liên hệ giáo viên <strong style={{color: '#667eea'}}>{selectedCourse?.instructor?.fullName}</strong> để lấy mã lớp (VD: Lớp 10A1, 10A2...).
+                                Liên hệ giáo viên <strong style={{color: '#667eea'}}>{selectedCourse?.instructor?.fullName}</strong> để lấy mã tham gia.
                             </Form.Text>
                             <Form.Control 
                                 size="lg" 
                                 type="text" 
-                                placeholder="Ví dụ: TOAN10A1..." 
+                                placeholder="Ví dụ: JAVA_K18..." 
                                 value={enrollmentKey}
                                 onChange={(e) => setEnrollmentKey(e.target.value.toUpperCase())}
                                 autoFocus 
