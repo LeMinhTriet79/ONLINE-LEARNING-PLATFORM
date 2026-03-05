@@ -41,8 +41,8 @@ public class DataSeeder implements CommandLineRunner {
         // 2. Tạo Users
         if (userRepository.count() == 0) {
             createUser("admin", "admin@gmail.com", RoleName.ADMIN, "Admin System");
-            createUser("teacher", "teacher@gmail.com", RoleName.TEACHER, "Giáo viên Đa khoa");
-            createUser("student", "student@gmail.com", RoleName.STUDENT, "Học sinh Giỏi");
+            createUser("teacher", "teacher@gmail.com", RoleName.TEACHER, "Trương Thị Kim Khoa");
+            createUser("student", "student@gmail.com", RoleName.STUDENT, "Phạm Võ Khải Anh");
 
             // TẠO THÊM GIÁO VIÊN TIN HỌC MỚI
             createUser("teacher_tin", "tin_teacher@gmail.com", RoleName.TEACHER, "Thầy Tin Học");
