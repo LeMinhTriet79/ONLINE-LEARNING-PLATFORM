@@ -13,6 +13,9 @@ import StudentDashboard from './pages/student/StudentDashboard';
 import StudentCourseDetail from './pages/student/StudentCourseDetail';
 import UserProfile from './pages/UserProfile';
 
+// ADMIN
+import AdminDashboard from './pages/admin/AdminDashboard';
+
 function App() {
   return (
     <BrowserRouter>
@@ -22,6 +25,9 @@ function App() {
         <Route path="/login" element={<Login />} />
 
         <Route path="/profile" element={<UserProfile />} />
+
+        {/* ADMIN ROUTES */}
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
         {/* TEACHER ROUTES */}
         <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
