@@ -373,7 +373,7 @@ const AdminDashboard = () => {
                             <Card.Body className="text-white text-center">
                                 <BookFill size={40} className="mb-2" />
                                 <h2 className="fw-bold mb-1">{stats?.totalCourses || 0}</h2>
-                                <p className="mb-0 opacity-75">Khóa học</p>
+                                <p className="mb-0 opacity-75">Môn học</p>
                             </Card.Body>
                         </Card>
                     </Col>
@@ -430,7 +430,7 @@ const AdminDashboard = () => {
                                         <Card className="h-100 border-0 shadow-sm">
                                             <Card.Header className="bg-info text-white">
                                                 <BookFill className="me-2" />
-                                                <strong>Khóa học phổ biến</strong>
+                                                <strong>Môn học phổ biến</strong>
                                             </Card.Header>
                                             <Card.Body>
                                                 <ListGroup variant="flush">
@@ -446,7 +446,7 @@ const AdminDashboard = () => {
                                                     ))}
                                                 </ListGroup>
                                                 {courses.length === 0 && (
-                                                    <Alert variant="info" className="mb-0">Chưa có khóa học nào</Alert>
+                                                    <Alert variant="info" className="mb-0">Chưa có môn học nào</Alert>
                                                 )}
                                             </Card.Body>
                                         </Card>
@@ -583,12 +583,12 @@ const AdminDashboard = () => {
                             </Tab>
 
                             {/* Courses Tab */}
-                            <Tab eventKey="courses" title={<span><BookFill className="me-2" />Khóa học ({courses.length})</span>}>
+                            <Tab eventKey="courses" title={<span><BookFill className="me-2" />Môn học ({courses.length})</span>}>
                                 <div className="mb-3">
                                     <InputGroup style={{ maxWidth: '400px' }}>
                                         <InputGroup.Text><Search /></InputGroup.Text>
                                         <Form.Control
-                                            placeholder="Tìm kiếm khóa học..."
+                                            placeholder="Tìm kiếm môn học..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                         />
@@ -596,7 +596,7 @@ const AdminDashboard = () => {
                                 </div>
                                 {filterCourses().length === 0 ? (
                                     <Alert variant="info">
-                                        {searchTerm ? 'Không tìm thấy kết quả phù hợp.' : 'Chưa có khóa học nào trong hệ thống.'}
+                                        {searchTerm ? 'Không tìm thấy kết quả phù hợp.' : 'Chưa có môn học nào trong hệ thống.'}
                                     </Alert>
                                 ) : (
                                     <Row className="g-3">
@@ -622,7 +622,7 @@ const AdminDashboard = () => {
                                                             <Button 
                                                                 variant="outline-primary" 
                                                                 size="sm"
-                                                                onClick={() => toast.info('Chức năng xem chi tiết khóa học')}
+                                                                onClick={() => toast.info('Chức năng xem chi tiết môn học')}
                                                             >
                                                                 <InfoCircleFill className="me-1" />
                                                                 Chi tiết
@@ -659,7 +659,7 @@ const AdminDashboard = () => {
                                                 <tr>
                                                     <th>ID</th>
                                                     <th>Tên lớp</th>
-                                                    <th>Khóa học</th>
+                                                    <th>Môn học</th>
                                                     <th>Giáo viên</th>
                                                     <th>Mã tham gia</th>
                                                     <th className="text-center">Số học sinh</th>
@@ -804,7 +804,7 @@ const AdminDashboard = () => {
                                     <Row>
                                         <Col md={6}>
                                             <p className="mb-2">
-                                                <strong>Khóa học:</strong> {selectedClass.course.title}
+                                                <strong>Môn học:</strong> {selectedClass.course.title}
                                             </p>
                                             <p className="mb-2">
                                                 <strong>Giáo viên:</strong> {selectedClass.course.instructor?.fullName}

@@ -41,4 +41,7 @@ public interface TeacherService {
     ClassRoom createClassRoom(Long courseId, ClassRoomRequest request);
     ClassRoom updateClassRoom(Long classId, ClassRoomRequest request);
     void deleteClassRoom(Long classId);
+
+    List<Submission> getGradedSubmissions(String instructorUsername);
+    void deleteStudentSubmission(Long submissionId);
 }
