@@ -2,8 +2,7 @@ package com.swd.online_learning.controller;
 
 import com.swd.online_learning.dto.ApiResponse;
 import com.swd.online_learning.dto.request.UserRequest;
-import com.swd.online_learning.dto.response.AdminDashboardStatResponse;
-import com.swd.online_learning.dto.response.UserResponse;
+import com.swd.online_learning.dto.response.*;
 import com.swd.online_learning.enums.RoleName;
 import com.swd.online_learning.service.AdminService;
 import lombok.RequiredArgsConstructor;
@@ -56,16 +55,21 @@ public class AdminController {
 
     // 6. Lấy tất cả khóa học
     @GetMapping("/courses")
-    public ResponseEntity<ApiResponse<List<com.swd.online_learning.entity.Course>>> getAllCourses() {
+    public ResponseEntity<ApiResponse<List<AdminCourseResponse>>> getAllCourses() {
         return ResponseEntity.ok(ApiResponse.success(adminService.getAllCourses(), "Lấy danh sách khóa học thành công"));
     }
 
     // 7. Lấy tất cả lớp học
     @GetMapping("/classes")
-    public ResponseEntity<ApiResponse<List<com.swd.online_learning.entity.ClassRoom>>> getAllClasses() {
+    public ResponseEntity<ApiResponse<List<AdminClassResponse>>> getAllClasses() {
         return ResponseEntity.ok(ApiResponse.success(adminService.getAllClasses(), "Lấy danh sách lớp học thành công"));
     }
 
+    // 8. Xem chi tiết 1 lớp học (Gồm thông tin chung và danh sách học sinh + Tiến độ)
+    @GetMapping("/classes/{classId}")
+    public ResponseEntity<ApiResponse<AdminClassDetailResponse>> getClassDetail(@PathVariable Long classId) {
+        return ResponseEntity.ok(ApiResponse.success(adminService.getClassDetail(classId), "Lấy chi tiết lớp học thành công"));
+    }
     // 8. Lấy danh sách học sinh trong lớp
     @GetMapping("/classes/{classId}/enrollments")
     public ResponseEntity<ApiResponse<List<com.swd.online_learning.entity.Enrollment>>> getClassEnrollments(@PathVariable Long classId) {

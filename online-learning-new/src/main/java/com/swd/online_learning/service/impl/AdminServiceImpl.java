@@ -1,8 +1,7 @@
 package com.swd.online_learning.service.impl;
 
 import com.swd.online_learning.dto.request.UserRequest;
-import com.swd.online_learning.dto.response.AdminDashboardStatResponse;
-import com.swd.online_learning.dto.response.UserResponse;
+import com.swd.online_learning.dto.response.*;
 import com.swd.online_learning.entity.ClassRoom;
 import com.swd.online_learning.entity.Course;
 import com.swd.online_learning.entity.Enrollment;
@@ -129,13 +128,60 @@ public class AdminServiceImpl implements AdminService {
     // === QUẢN LÝ KHÓA HỌC VÀ LỚP HỌC ===
 
     @Override
-    public List<Course> getAllCourses() {
-        return courseRepository.findAll();
+    public List<AdminCourseResponse> getAllCourses() {
+        List<Course> courses = courseRepository.findAll();
+        return courses.stream().map(course -> AdminCourseResponse.builder()
+                .courseId(course.getCourseId())
+                .title(course.getTitle())
+                .imageUrl(course.getImageUrl())
+                .instructorName(course.getInstructor().getFullName())
+                .totalClasses(course.getClasses() != null ? course.getClasses().size() : 0)
+                .build()
+        ).collect(Collectors.toList());
     }
 
     @Override
-    public List<ClassRoom> getAllClasses() {
-        return classRoomRepository.findAll();
+    public List<AdminClassResponse> getAllClasses() {
+        List<ClassRoom> classes = classRoomRepository.findAll();
+        return classes.stream().map(cls -> {
+            int studentCount = enrollmentRepository.findByClassRoom_ClassId(cls.getClassId()).size();
+            return AdminClassResponse.builder()
+                    .classId(cls.getClassId())
+                    .className(cls.getClassName())
+                    .courseName(cls.getCourse().getTitle())
+                    .instructorName(cls.getCourse().getInstructor().getFullName())
+                    .enrollmentKey(cls.getEnrollmentKey())
+                    .totalStudents(studentCount)
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public AdminClassDetailResponse getClassDetail(Long classId) {
+        ClassRoom cls = classRoomRepository.findById(classId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp học!"));
+
+        List<Enrollment> enrollments = enrollmentRepository.findByClassRoom_ClassId(classId);
+
+        List<AdminStudentProgressResponse> studentList = enrollments.stream().map(enroll ->
+                AdminStudentProgressResponse.builder()
+                        .studentId(enroll.getStudent().getUserId())
+                        .fullName(enroll.getStudent().getFullName())
+                        .username(enroll.getStudent().getUsername())
+                        .email(enroll.getStudent().getEmail())
+                        .progressPercent(enroll.getProgressPercent())
+                        .build()
+        ).collect(Collectors.toList());
+
+        return AdminClassDetailResponse.builder()
+                .classId(cls.getClassId())
+                .className(cls.getClassName())
+                .courseName(cls.getCourse().getTitle())
+                .instructorName(cls.getCourse().getInstructor().getFullName())
+                .enrollmentKey(cls.getEnrollmentKey())
+                .totalStudents(studentList.size())
+                .students(studentList)
+                .build();
     }
 
     @Override
