@@ -82,7 +82,7 @@ const TeacherDashboard = () => {
     const handleSubmit = async () => {
         // Đã xóa điều kiện check enrollmentKey
         if (!formData.title) { 
-            toast.warning("Vui lòng nhập tên khóa học!"); return; 
+            toast.warning("Vui lòng nhập tên môn học!"); return; 
         }
         try {
             if (isEditing) {
@@ -90,7 +90,7 @@ const TeacherDashboard = () => {
                 toast.success("Cập nhật thành công!");
             } else {
                 await axiosClient.post('/teacher/courses', formData);
-                toast.success("Tạo khóa học thành công!");
+                toast.success("Tạo môn học thành công!");
             }
             setShowModal(false);
             fetchCourses();
@@ -98,10 +98,10 @@ const TeacherDashboard = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("Xóa khóa học sẽ mất hết dữ liệu! Bạn chắc chứ?")) {
+        if (window.confirm("Xóa môn học sẽ mất hết dữ liệu! Bạn chắc chứ?")) {
             try {
                 await axiosClient.delete(`/teacher/courses/${id}`);
-                toast.success("Đã xóa khóa học!");
+                toast.success("Đã xóa môn học!");
                 fetchCourses();
             } catch (error) { toast.error("Lỗi xóa!"); }
         }
@@ -219,7 +219,7 @@ const TeacherDashboard = () => {
                     </div>
                 </div>
 
-                {/* Action Bar - Tạo Khóa Học */}
+                {/* Action Bar - Tạo Môn Học */}
                 <div className="mb-4 d-flex justify-content-between align-items-center">
                     <div>
                         <h5 className="fw-bold mb-1" style={{color: '#1f2937'}}>
@@ -247,7 +247,7 @@ const TeacherDashboard = () => {
                             e.currentTarget.style.transform = 'translateY(0)';
                             e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
                         }}>
-                        <PlusCircle className="me-2" size={18}/> Tạo Khóa Học Mới
+                        <PlusCircle className="me-2" size={18}/> Tạo Môn Học Mới
                     </Button>
                 </div>
 
@@ -262,7 +262,7 @@ const TeacherDashboard = () => {
                 {!loading && courses.length === 0 ? (
                     <div className="text-center p-5 bg-white" style={{borderRadius: '20px', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)'}}>
                         <div style={{fontSize: '4rem', marginBottom: '16px'}}>📚</div>
-                        <h4 style={{color: '#6b7280', marginBottom: '16px'}}>Chưa có khóa học nào</h4>
+                        <h4 style={{color: '#6b7280', marginBottom: '16px'}}>Chưa có môn học nào</h4>
                         <Button 
                             className="fw-semibold text-white border-0"
                             onClick={() => handleOpenModal()}
@@ -272,7 +272,7 @@ const TeacherDashboard = () => {
                                 padding: '12px 32px',
                                 boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                             }}>
-                            <PlusCircle className="me-2" size={18}/> Tạo khóa học đầu tiên
+                            <PlusCircle className="me-2" size={18}/> Tạo môn học đầu tiên
                         </Button>
                     </div>
                 ) : (
@@ -356,7 +356,7 @@ const TeacherDashboard = () => {
                     </Row>
                 )}
 
-                {/* Modal Tạo/Sửa Khóa Học */}
+                {/* Modal Tạo/Sửa Môn Học */}
                 <Modal show={showModal} onHide={() => setShowModal(false)} centered>
                     <Modal.Header 
                         closeButton 
@@ -368,13 +368,13 @@ const TeacherDashboard = () => {
                             padding: '24px'
                         }}>
                         <Modal.Title className="fw-bold" style={{fontSize: '1.3rem'}}>
-                            {isEditing ? "✏️ Cập Nhật Khóa Học" : "➕ Tạo Khóa Học Mới"}
+                            {isEditing ? "✏️ Cập Nhật Môn Học" : "➕ Tạo Môn Học Mới"}
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body style={{padding: '32px', background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)'}}>
                         <Form>
                             <Form.Group className="mb-4">
-                                <Form.Label className="fw-bold mb-2" style={{color: '#667eea'}}>📝 Tên khóa học</Form.Label>
+                                <Form.Label className="fw-bold mb-2" style={{color: '#667eea'}}>📝 Tên môn học</Form.Label>
                                 <Form.Control 
                                     value={formData.title} 
                                     onChange={e => setFormData({...formData, title: e.target.value})} 
@@ -443,7 +443,7 @@ const TeacherDashboard = () => {
                                     rows={4} 
                                     value={formData.description} 
                                     onChange={e => setFormData({...formData, description: e.target.value})}
-                                    placeholder="Nhập mô tả ngắn gọn về khóa học..."
+                                    placeholder="Nhập mô tả ngắn gọn về môn học..."
                                     style={{
                                         borderRadius: '12px',
                                         border: '2px solid #e5e7eb',

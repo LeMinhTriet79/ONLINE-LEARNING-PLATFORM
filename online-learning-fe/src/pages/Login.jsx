@@ -25,7 +25,9 @@ const Login = () => {
                 toast.success('Đăng nhập thành công!');
 
                 // Điều hướng dựa trên Role
-                if (role === 'TEACHER') {
+                if (role === 'ADMIN') {
+                    navigate('/admin/dashboard');
+                } else if (role === 'TEACHER') {
                     navigate('/teacher/courses'); // Sẽ làm trang này sau
                 } else if (role === 'STUDENT') {
                     navigate('/student/dashboard'); 
