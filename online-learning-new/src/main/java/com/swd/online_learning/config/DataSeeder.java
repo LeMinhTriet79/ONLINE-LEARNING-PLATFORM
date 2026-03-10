@@ -33,7 +33,7 @@ public class DataSeeder implements CommandLineRunner {
             // GIÁO VIÊN
             createuser("teacher_hai", "hai@gmail.com", RoleName.TEACHER, "Đỗ Hồng Hài");
             createuser("teacher_khoa", "khoa@gmail.com", RoleName.TEACHER, "Trương Thị Kim Khoa");
-            createuser("teacher_son", "son@gmail.com", RoleName.TEACHER, "Nguyễn Văn Sơn");
+            createuser("teacher_son", "son@gmail.com", RoleName.TEACHER, "Nguyễn Thanh Sơn");
 
             // HỌC SINH (Học sinh cũ + Danh sách 11 học sinh mới)
             createuser("student", "student@gmail.com", RoleName.STUDENT, "Phạm Võ Khải Anh");

@@ -1,8 +1,7 @@
 package com.swd.online_learning.service;
 
 import com.swd.online_learning.dto.request.UserRequest;
-import com.swd.online_learning.dto.response.AdminDashboardStatResponse;
-import com.swd.online_learning.dto.response.UserResponse;
+import com.swd.online_learning.dto.response.*;
 import com.swd.online_learning.entity.ClassRoom;
 import com.swd.online_learning.entity.Course;
 import com.swd.online_learning.entity.Enrollment;
@@ -22,9 +21,10 @@ public interface AdminService {
     void deleteUser(Long userId);
 
     // Quản lý khóa học và lớp học
-    List<Course> getAllCourses();
+    List<AdminCourseResponse> getAllCourses();
 
-    List<ClassRoom> getAllClasses();
+    List<AdminClassResponse> getAllClasses();
 
+    AdminClassDetailResponse getClassDetail(Long classId);
     List<Enrollment> getClassEnrollments(Long classId);
 }
