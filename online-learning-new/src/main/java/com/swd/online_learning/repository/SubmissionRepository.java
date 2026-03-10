@@ -50,4 +50,8 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
             "WHERE s.enrollment.classRoom.course.courseId = :courseId " +
             "AND s.status = 'PENDING'")
     List<Submission> findPendingSubmissionsByCourse(Long courseId);
+
+    // Lấy danh sách bài ĐÃ CHẤM của giáo viên
+    @Query("SELECT s FROM Submission s WHERE s.status = 'GRADED' AND s.enrollment.classRoom.course.instructor.username = :username ORDER BY s.submissionId DESC")
+    List<Submission> findGradedSubmissionsByInstructor(String username);
 }

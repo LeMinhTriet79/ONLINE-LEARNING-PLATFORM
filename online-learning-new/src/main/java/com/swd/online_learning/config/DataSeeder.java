@@ -27,17 +27,43 @@ public class DataSeeder implements CommandLineRunner {
         }
 
         if (userRepository.count() == 0) {
-            createuser("admin", "admin@gmail.com", RoleName.ADMIN, "Admin System");
-            createuser("teacher", "teacher@gmail.com", RoleName.TEACHER, "Giáo viên Demo");
-            createuser("student", "student@gmail.com", RoleName.STUDENT, "Học sinh Demo");
+            // ADMIN
+            createuser("admin", "admin@gmail.com", RoleName.ADMIN, "Trần Cao Sĩ");
+
+            // GIÁO VIÊN
+            createuser("teacher_hai", "hai@gmail.com", RoleName.TEACHER, "Đỗ Hồng Hài");
+            createuser("teacher_khoa", "khoa@gmail.com", RoleName.TEACHER, "Trương Thị Kim Khoa");
+            createuser("teacher_son", "son@gmail.com", RoleName.TEACHER, "Nguyễn Văn Sơn");
+
+            // HỌC SINH (Học sinh cũ + Danh sách 11 học sinh mới)
+            createuser("student", "student@gmail.com", RoleName.STUDENT, "Phạm Võ Khải Anh");
+            createuser("student_khai", "khai@gmail.com", RoleName.STUDENT, "Đào Minh Khải");
+            createuser("student_tien", "tien@gmail.com", RoleName.STUDENT, "Trần Thị Mỹ Tiên");
+            createuser("student_thanh", "thanh@gmail.com", RoleName.STUDENT, "Nguyễn Tuấn Thanh");
+            createuser("student_phuc", "phuc@gmail.com", RoleName.STUDENT, "Ngô Tấn Phúc");
+            createuser("student_trung", "trung@gmail.com", RoleName.STUDENT, "Nguyễn Minh Trung");
+            createuser("student_toi", "toi@gmail.com", RoleName.STUDENT, "Nguyễn Thanh Tới");
+            createuser("student_nganem", "nganem@gmail.com", RoleName.STUDENT, "Thái Thị Ngân Em");
+            createuser("student_tho", "tho@gmail.com", RoleName.STUDENT, "Võ Quốc Thọ");
+            createuser("student_linh", "linh@gmail.com", RoleName.STUDENT, "Quang Văn Hoài Linh");
+            createuser("student_mai", "mai@gmail.com", RoleName.STUDENT, "Lương Thị Ngọc Mai");
+            createuser("student_hanh", "hanh@gmail.com", RoleName.STUDENT, "Bùi Thị Hạnh");
         }
 
         if (courseRepository.count() == 0) {
-            User teacher = userRepository.findByUsername("teacher").orElse(null);
-            if (teacher != null) {
-                createCourse("Vật lý 10", "Khóa học Vật lý 10", "https://thuvienvatly.com/home/images/download_thumb/1PAWkMteydy2rR7UEJFmuLL4KXwwj1Wer.jpg", "VATLY10", teacher);
-                createCourse("Hóa học 10", "Khóa học Hóa học 10", "https://hieusach24h.com/wp-content/uploads/2021/09/Hoa-hoc-10-1.jpg", "HOA10", teacher);
-                createCourse("Lịch sử 10", "Khóa học Lịch sử 10", "https://sachcuatui.net/wp-content/uploads/2019/10/Sach-giao-khoa-lich-su-lop-10.jpg", "SU10", teacher);
+            // Lấy từng giáo viên ra để giao đúng môn
+            User teacherHai = userRepository.findByUsername("teacher_hai").orElse(null);
+            User teacherKhoa = userRepository.findByUsername("teacher_khoa").orElse(null);
+            User teacherSon = userRepository.findByUsername("teacher_son").orElse(null);
+
+            if (teacherHai != null) {
+                createCourse("Vật lý 10", "Môn học Vật lý 10", "https://thuvienvatly.com/home/images/download_thumb/1PAWkMteydy2rR7UEJFmuLL4KXwwj1Wer.jpg", "VATLY10", teacherHai);
+            }
+            if (teacherKhoa != null) {
+                createCourse("Hóa học 10", "Môn học Hóa học 10", "https://hieusach24h.com/wp-content/uploads/2021/09/Hoa-hoc-10-1.jpg", "HOA10", teacherKhoa);
+            }
+            if (teacherSon != null) {
+                createCourse("Lịch sử 10", "Môn học Lịch sử 10", "https://sachcuatui.net/wp-content/uploads/2019/10/Sach-giao-khoa-lich-su-lop-10.jpg", "SU10", teacherSon);
             }
         }
     }
@@ -50,7 +76,6 @@ public class DataSeeder implements CommandLineRunner {
                 .fullName(fullName)
                 .email(email)
                 .role(role)
-                // ĐÃ XÓA .isActive() THEO Ý BẠN
                 .build();
         userRepository.save(user);
     }
@@ -60,7 +85,6 @@ public class DataSeeder implements CommandLineRunner {
                 .title(title)
                 .description(description)
                 .imageUrl(imageUrl)
-                // ĐÃ XÓA .enrollmentKey(baseKey)
                 .instructor(instructor)
                 .build();
         Course savedCourse = courseRepository.save(course);

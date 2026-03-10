@@ -19,7 +19,7 @@ const StudentCourseDetail = () => {
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null); 
 
-    // 1. Load thông tin khóa học
+    // 1. Load thông tin môn học
     const fetchCourseDetail = async () => {
         try {
             const res = await axiosClient.get(`/student/courses/${courseId}/full`); 
@@ -31,7 +31,7 @@ const StudentCourseDetail = () => {
                 }
             }
         } catch (error) { 
-            toast.error(error.response?.data?.message || "Lỗi tải khóa học");
+            toast.error(error.response?.data?.message || "Lỗi tải môn học");
             navigate('/student/dashboard');
         } finally {
             setLoading(false);
@@ -89,7 +89,7 @@ const StudentCourseDetail = () => {
         <div className="d-flex justify-content-center align-items-center" style={{minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
             <div className="text-center">
                 <Spinner animation="border" style={{width: '3rem', height: '3rem', color: 'white'}}/>
-                <p className="text-white fw-bold mt-3">Đang tải khóa học...</p>
+                <p className="text-white fw-bold mt-3">Đang tải môn học...</p>
             </div>
         </div>
     );
@@ -222,7 +222,7 @@ const StudentCourseDetail = () => {
                                 padding: '20px 24px',
                                 fontSize: '1.1rem'
                             }}>
-                            📑 Nội Dung Khóa Học
+                            📑 Nội Dung Môn Học
                         </Card.Header>
                         <Card.Body className="p-0 overflow-auto" style={{maxHeight: '80vh', background: '#ffffff'}}>
                             <Accordion defaultActiveKey="0" flush>

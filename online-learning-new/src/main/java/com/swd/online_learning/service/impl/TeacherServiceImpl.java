@@ -274,6 +274,24 @@ public class TeacherServiceImpl implements TeacherService {
         return submissionRepository.findPendingSubmissionsByCourse(courseId);
     }
 
+    @Override
+    public List<Submission> getGradedSubmissions(String instructorUsername) {
+        return submissionRepository.findGradedSubmissionsByInstructor(instructorUsername);
+    }
+
+    @Override
+    @Transactional
+    public void deleteStudentSubmission(Long submissionId) {
+        Submission submission = submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new RuntimeException("Submission not found"));
+        Enrollment enrollment = submission.getEnrollment();
+
+        submissionRepository.delete(submission);
+
+        // Xóa bài nộp xong phải trừ điểm quá trình của học sinh đi
+        updateProgress(enrollment);
+    }
+
     // ================= CLASSROOM (LỚP HỌC) =================
     @Override
     @Transactional

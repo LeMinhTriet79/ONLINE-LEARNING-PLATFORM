@@ -16,10 +16,12 @@ const CourseDetail = () => {
     // --- STATE QUẢN LÝ ---
     const [students, setStudents] = useState([]);
     const [pendingSubmissions, setPendingSubmissions] = useState([]);
+    const [gradedSubmissions, setGradedSubmissions] = useState([]);
     const [activeTab, setActiveTab] = useState('content'); // 'content', 'classes', or 'students'
     
     // --- STATE BỘ LỌC LỚP HỌC (MỚI) ---
     const [selectedClassFilter, setSelectedClassFilter] = useState('ALL'); // 'ALL' hoặc classId
+    const [submissionTab, setSubmissionTab] = useState('pending'); // 'pending' or 'graded'
 
     // --- STATE MODAL CHƯƠNG ---
     const [showChapterModal, setShowChapterModal] = useState(false);
@@ -49,17 +51,23 @@ const CourseDetail = () => {
                     setChapters(foundCourse.chapters?.sort((a, b) => a.orderIndex - b.orderIndex) || []);
                 }
             }
-        } catch (error) { toast.error("Lỗi tải dữ liệu khóa học!"); }
+        } catch (error) { toast.error("Lỗi tải dữ liệu môn học!"); }
     };
 
     const fetchClassData = async () => {
         try {
-            const [resStudents, resPending] = await Promise.all([
+            const [resStudents, resPending, resGraded] = await Promise.all([
                 axiosClient.get(`/teacher/courses/${courseId}/students`),
-                axiosClient.get(`/teacher/courses/${courseId}/submissions/pending`)
+                axiosClient.get(`/teacher/courses/${courseId}/submissions/pending`),
+                axiosClient.get('/teacher/submissions/graded')
             ]);
             if (resStudents.data.status) setStudents(resStudents.data.data);
             if (resPending.data.status) setPendingSubmissions(resPending.data.data);
+            if (resGraded.data.status) {
+                // Lọc chỉ lấy bài của môn học này
+                const filtered = resGraded.data.data.filter(s => s.enrollment?.classRoom?.course?.courseId == courseId);
+                setGradedSubmissions(filtered);
+            }
         } catch (error) { console.error("Lỗi tải dữ liệu lớp học"); }
     };
 
@@ -182,11 +190,20 @@ const CourseDetail = () => {
         ? pendingSubmissions
         : pendingSubmissions.filter(s => s.enrollment?.classRoom?.classId.toString() === selectedClassFilter);
 
+    const filteredGradedSubmissions = selectedClassFilter === 'ALL'
+        ? gradedSubmissions
+        : gradedSubmissions.filter(s => s.enrollment?.classRoom?.classId.toString() === selectedClassFilter);
+
     // --- LOGIC CHẤM BÀI ---
     const openGradeModal = (sub) => {
         setCurrentSub(sub);
-        setScore(8);
-        setFeedback('Bài làm tốt.');
+        if (sub.status === 'GRADED') {
+            setScore(sub.score);
+            setFeedback(sub.teacherFeedback || '');
+        } else {
+            setScore(8);
+            setFeedback('Bài làm tốt.');
+        }
         setShowGradeModal(true);
     };
 
@@ -196,10 +213,22 @@ const CourseDetail = () => {
                 score: parseFloat(score),
                 feedback: feedback
             });
-            toast.success("Đã chấm điểm thành công!");
+            toast.success(currentSub.status === 'GRADED' ? "Sửa điểm thành công!" : "Đã chấm điểm thành công!");
             setShowGradeModal(false);
             fetchClassData();
-        } catch (error) { toast.error("Lỗi chấm điểm!"); }
+        } catch (error) { toast.error("Lỗi xử lý điểm!"); }
+    };
+
+    const handleDeleteSubmission = async (subId) => {
+        if (window.confirm("CẢNH BÁO: Xóa bài nộp này sẽ khiến học sinh bị mất điểm và tụt tiến độ. Học sinh sẽ phải nộp lại bài. Bạn có chắc chắn?")) {
+            try {
+                await axiosClient.delete(`/teacher/submissions/${subId}`);
+                toast.success("Đã xóa bài nộp. Học sinh có thể nộp lại.");
+                fetchClassData();
+            } catch (error) {
+                toast.error("Lỗi xóa bài nộp!");
+            }
+        }
     };
 
     if (!course) return <div className="text-center mt-5">Đang tải...</div>;
@@ -219,7 +248,7 @@ const CourseDetail = () => {
                         padding: '10px 24px',
                         boxShadow: '0 2px 8px rgba(102, 126, 234, 0.15)'
                     }}>
-                    &larr; Danh sách khóa học
+                    &larr; Danh sách môn học
                 </Button>
                 
                 {/* Header gradient */}
@@ -242,7 +271,7 @@ const CourseDetail = () => {
                         '& .nav-link': { borderRadius: '12px 12px 0 0' }
                     }}>
                 
-                {/* --- TAB 1: NỘI DUNG KHÓA HỌC --- */}
+                {/* --- TAB 1: NỘI DUNG MÔN HỌC --- */}
                 <Tab eventKey="content" title={<span className="fw-bold" style={{fontSize: '1.05rem'}}>📚 Nội Dung & Soạn Bài</span>}>
                     <div className="d-flex justify-content-end mb-3">
                         <Button 
@@ -505,86 +534,138 @@ const CourseDetail = () => {
                         ))}
                     </div>
 
-                    {/* SECTION 1: DANH SÁCH CẦN CHẤM */}
-                    <Card 
-                        className="mb-4"
-                        style={{
-                            border: 'none',
-                            borderRadius: '20px',
-                            overflow: 'hidden',
-                            boxShadow: '0 4px 20px rgba(251, 146, 60, 0.15)'
-                        }}>
-                        <Card.Header 
-                            className="fw-bold text-white d-flex justify-content-between align-items-center"
-                            style={{
-                                background: 'linear-gradient(135deg, #fb923c 0%, #f59e0b 100%)',
-                                padding: '20px 24px',
-                                fontSize: '1.1rem'
-                            }}>
-                            <span><Pen className="me-2" size={20}/> Bài Tập Cần Chấm ({filteredSubmissions.length})</span>
-                            {selectedClassFilter !== 'ALL' && <Badge bg="light" text="dark" className="rounded-pill">Đang lọc lớp</Badge>}
-                        </Card.Header>
-                        <Card.Body className="p-0">
-                            {filteredSubmissions.length === 0 ? (
-                                <div className="p-5 text-center">
-                                    <div style={{fontSize: '3rem', marginBottom: '12px'}}>✅</div>
-                                    <h5 className="text-muted">Không có bài tập nào cần chấm trong danh sách này.</h5>
-                                </div>
-                            ) : (
-                                <Table hover className="m-0 align-middle" style={{fontSize: '0.95rem'}}>
-                                    <thead style={{background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)'}}>
-                                        <tr>
-                                            <th className="ps-4 py-3 fw-bold" style={{color: '#4b5563'}}>Học Sinh</th>
-                                            <th className="py-3 fw-bold" style={{color: '#4b5563'}}>Lớp</th>
-                                            <th className="py-3 fw-bold" style={{color: '#4b5563'}}>Bài Tập</th>
-                                            <th className="py-3 fw-bold" style={{color: '#4b5563'}}>File</th>
-                                            <th className="text-center py-3 fw-bold" style={{color: '#4b5563'}}>Thao Tác</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredSubmissions.map(sub => (
-                                            <tr key={sub.submissionId} style={{transition: 'background 0.2s'}}>
-                                                <td className="ps-4 py-3 fw-bold" style={{color: '#1f2937'}}>{sub.enrollment?.student?.fullName}</td>
-                                                <td className="py-3"><Badge bg="info">{sub.enrollment?.classRoom?.className || 'N/A'}</Badge></td>
-                                                <td className="py-3">{sub.assignment?.title}</td>
-                                                <td className="py-3">
-                                                    {sub.attachmentUrl ? (
-                                                        <a 
-                                                            href={sub.attachmentUrl} 
-                                                            target="_blank" 
-                                                            rel="noreferrer" 
-                                                            className="btn btn-sm"
-                                                            style={{
-                                                                background: 'white',
-                                                                border: '2px solid #6b7280',
-                                                                color: '#6b7280',
-                                                                borderRadius: '8px',
-                                                                padding: '6px 14px'
-                                                            }}>
-                                                            <FileEarmarkText className="me-1" size={14}/> Xem
-                                                        </a>
-                                                    ) : <span className="text-muted small">Không file</span>}
-                                                </td>
-                                                <td className="text-center py-3">
-                                                    <Button 
-                                                        size="sm" 
-                                                        className="fw-semibold text-white border-0"
-                                                        onClick={() => openGradeModal(sub)}
-                                                        style={{
-                                                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                                                            borderRadius: '10px',
-                                                            padding: '8px 20px',
-                                                            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
-                                                        }}>
-                                                        Chấm Ngay
-                                                    </Button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </Table>
-                            )}
-                        </Card.Body>
+                    {/* SECTION 1: QUẢN LÝ CHẤM BÀI (2 TAB) */}
+                    <Card className="mb-4" style={{border: 'none', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'}}>
+                        <Tabs 
+                            activeKey={submissionTab} 
+                            onSelect={(k) => setSubmissionTab(k)} 
+                            className="px-3 pt-3"
+                            style={{borderBottom: '2px solid #e5e7eb'}}>
+                            
+                            {/* TAB: CẦN CHẤM */}
+                            <Tab eventKey="pending" title={<span className="fw-bold px-2" style={{fontSize: '1rem'}}>⏳ Cần Chấm ({filteredSubmissions.length})</span>}>
+                                <Card.Body className="p-0">
+                                    {filteredSubmissions.length === 0 ? (
+                                        <div className="p-5 text-center">
+                                            <div style={{fontSize: '3rem', marginBottom: '12px'}}>🎉</div>
+                                            <h5 className="text-muted">Không có bài tập nào cần chấm trong danh sách này.</h5>
+                                        </div>
+                                    ) : (
+                                        <Table hover className="m-0 align-middle" style={{fontSize: '0.95rem'}}>
+                                            <thead style={{background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)'}}>
+                                                <tr>
+                                                    <th className="ps-4 py-3 fw-bold" style={{color: '#4b5563'}}>Học Sinh</th>
+                                                    <th className="py-3 fw-bold" style={{color: '#4b5563'}}>Lớp</th>
+                                                    <th className="py-3 fw-bold" style={{color: '#4b5563'}}>Bài Tập</th>
+                                                    <th className="py-3 fw-bold" style={{color: '#4b5563'}}>File</th>
+                                                    <th className="text-center py-3 fw-bold" style={{color: '#4b5563'}}>Thao Tác</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {filteredSubmissions.map(sub => (
+                                                    <tr key={sub.submissionId} style={{transition: 'background 0.2s'}}>
+                                                        <td className="ps-4 py-3 fw-bold" style={{color: '#1f2937'}}>{sub.enrollment?.student?.fullName}</td>
+                                                        <td className="py-3"><Badge bg="info">{sub.enrollment?.classRoom?.className || 'N/A'}</Badge></td>
+                                                        <td className="py-3">{sub.assignment?.title}</td>
+                                                        <td className="py-3">
+                                                            {sub.attachmentUrl ? (
+                                                                <a 
+                                                                    href={sub.attachmentUrl} 
+                                                                    target="_blank" 
+                                                                    rel="noreferrer" 
+                                                                    className="btn btn-sm"
+                                                                    style={{
+                                                                        background: 'white',
+                                                                        border: '2px solid #6b7280',
+                                                                        color: '#6b7280',
+                                                                        borderRadius: '8px',
+                                                                        padding: '6px 14px'
+                                                                    }}>
+                                                                    <FileEarmarkText className="me-1" size={14}/> Xem
+                                                                </a>
+                                                            ) : <span className="text-muted small">Không file</span>}
+                                                        </td>
+                                                        <td className="text-center py-3">
+                                                            <Button 
+                                                                size="sm" 
+                                                                className="fw-semibold text-white border-0"
+                                                                onClick={() => openGradeModal(sub)}
+                                                                style={{
+                                                                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                                                    borderRadius: '10px',
+                                                                    padding: '8px 20px',
+                                                                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+                                                                }}>
+                                                                <Pen className="me-1" size={14}/> Chấm Ngay
+                                                            </Button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </Table>
+                                    )}
+                                </Card.Body>
+                            </Tab>
+
+                            {/* TAB: ĐÃ CHẤM */}
+                            <Tab eventKey="graded" title={<span className="fw-bold px-2" style={{fontSize: '1rem'}}>✔️ Đã Chấm ({filteredGradedSubmissions.length})</span>}>
+                                <Card.Body className="p-0">
+                                    {filteredGradedSubmissions.length === 0 ? (
+                                        <div className="p-5 text-center">
+                                            <div style={{fontSize: '3rem', marginBottom: '12px'}}>📭</div>
+                                            <h5 className="text-muted">Chưa có bài đã chấm nào trong danh sách này.</h5>
+                                        </div>
+                                    ) : (
+                                        <Table hover className="m-0 align-middle" style={{fontSize: '0.95rem'}}>
+                                            <thead style={{background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)'}}>
+                                                <tr>
+                                                    <th className="ps-4 py-3 fw-bold" style={{color: '#4b5563'}}>Học Sinh</th>
+                                                    <th className="py-3 fw-bold" style={{color: '#4b5563'}}>Lớp</th>
+                                                    <th className="py-3 fw-bold" style={{color: '#4b5563'}}>Bài Tập</th>
+                                                    <th className="py-3 fw-bold" style={{color: '#4b5563'}}>Điểm / Feedback</th>
+                                                    <th className="text-center py-3 fw-bold" style={{color: '#4b5563'}}>Thao Tác</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {filteredGradedSubmissions.map(sub => (
+                                                    <tr key={sub.submissionId} style={{background: sub.score < 5 ? '#fef2f2' : 'white'}}>
+                                                        <td className="ps-4 py-3 fw-bold" style={{color: '#1f2937'}}>{sub.enrollment?.student?.fullName}</td>
+                                                        <td className="py-3"><Badge bg="info">{sub.enrollment?.classRoom?.className || 'N/A'}</Badge></td>
+                                                        <td className="py-3">
+                                                            <div className="fw-bold mb-1">{sub.assignment?.title}</div>
+                                                            {sub.attachmentUrl && (
+                                                                <a href={sub.attachmentUrl} target="_blank" rel="noreferrer" className="small text-muted">
+                                                                    <FileEarmarkText className="me-1"/> Xem bài nộp
+                                                                </a>
+                                                            )}
+                                                        </td>
+                                                        <td className="py-3" style={{maxWidth: '300px'}}>
+                                                            <div className="d-flex align-items-center mb-1">
+                                                                <strong style={{color: sub.score >= 5 ? '#059669' : '#dc2626', fontSize: '1.1rem'}}>
+                                                                    {sub.score}/10
+                                                                </strong>
+                                                                {sub.score >= 5 ? <Badge bg="success" className="ms-2">Đạt</Badge> : <Badge bg="danger" className="ms-2">Chưa Đạt</Badge>}
+                                                            </div>
+                                                            <small className="text-muted text-truncate d-block" title={sub.teacherFeedback}>
+                                                                "{sub.teacherFeedback || 'Không có nhận xét'}"
+                                                            </small>
+                                                        </td>
+                                                        <td className="text-center py-3">
+                                                            <Button variant="outline-primary" size="sm" className="me-2" onClick={() => openGradeModal(sub)} style={{borderRadius: '8px', fontWeight: '600'}}>
+                                                                <Pen className="me-1"/> Sửa Điểm
+                                                            </Button>
+                                                            <Button variant="outline-danger" size="sm" onClick={() => handleDeleteSubmission(sub.submissionId)} style={{borderRadius: '8px', fontWeight: '600'}}>
+                                                                <Trash className="me-1"/> Xóa
+                                                            </Button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </Table>
+                                    )}
+                                </Card.Body>
+                            </Tab>
+                        </Tabs>
                     </Card>
 
                     {/* SECTION 2: DANH SÁCH HỌC VIÊN */}
@@ -788,43 +869,49 @@ const CourseDetail = () => {
                 </Modal.Footer>
             </Modal>
 
-            {/* MODAL CHẤM BÀI */}
+            {/* MODAL CHẤM BÀI / SỬA ĐIỂM */}
             <Modal show={showGradeModal} onHide={() => setShowGradeModal(false)} centered>
                 <Modal.Header 
                     closeButton 
                     className="border-0 text-white"
                     style={{
-                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        background: currentSub?.status === 'GRADED' 
+                            ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' 
+                            : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                         padding: '24px'
                     }}>
                     <Modal.Title className="fw-bold" style={{fontSize: '1.3rem'}}>
-                        ✅ Chấm Bài: {currentSub?.enrollment?.student?.fullName}
+                        {currentSub?.status === 'GRADED' ? '✏️ Cập Nhật Điểm:' : '✅ Chấm Bài:'} {currentSub?.enrollment?.student?.fullName}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body style={{padding: '32px', background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)'}}>
                     <Form.Group className="mb-4">
-                        <Form.Label className="fw-bold mb-2" style={{color: '#10b981'}}>🎯 Điểm số (Thang 10)</Form.Label>
+                        <Form.Label className="fw-bold mb-2" style={{color: currentSub?.status === 'GRADED' ? '#2563eb' : '#10b981'}}>🎯 Điểm số (Thang 10)</Form.Label>
                         <Form.Control 
                             type="number" 
                             min="0" 
-                            max="10" 
+                            max="10"
+                            step="0.5"
                             value={score} 
                             onChange={e => setScore(e.target.value)} 
                             autoFocus
                             size="lg"
                             style={{
                                 borderRadius: '12px',
-                                border: '2px solid #10b981',
+                                border: `2px solid ${currentSub?.status === 'GRADED' ? '#2563eb' : '#10b981'}`,
                                 padding: '12px 16px',
                                 fontSize: '1.2rem',
                                 fontWeight: '700',
-                                color: '#10b981',
+                                color: currentSub?.status === 'GRADED' ? '#2563eb' : '#10b981',
                                 textAlign: 'center'
                             }}
                         />
+                        <Form.Text className="text-muted d-block mt-2">
+                            ℹ️ Nhập ≥ 5.0 để tính là Đạt (Passed).
+                        </Form.Text>
                     </Form.Group>
                     <Form.Group className="mb-3">
-                        <Form.Label className="fw-bold mb-2" style={{color: '#10b981'}}>💬 Nhận xét</Form.Label>
+                        <Form.Label className="fw-bold mb-2" style={{color: currentSub?.status === 'GRADED' ? '#2563eb' : '#10b981'}}>💬 Nhận xét / Feedback</Form.Label>
                         <Form.Control 
                             as="textarea" 
                             rows={4} 
@@ -850,12 +937,14 @@ const CourseDetail = () => {
                         onClick={handleGradeSubmit}
                         className="text-white border-0 fw-semibold"
                         style={{
-                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            background: currentSub?.status === 'GRADED' 
+                                ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                             borderRadius: '10px',
                             padding: '10px 32px',
-                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                            boxShadow: '0 4px 12px rgba(0,0,0, 0.2)'
                         }}>
-                        ✔️ Xác Nhận
+                        {currentSub?.status === 'GRADED' ? '✔️ Cập Nhật' : '✔️ Xác Nhận & Lưu'}
                     </Button>
                 </Modal.Footer>
             </Modal>
