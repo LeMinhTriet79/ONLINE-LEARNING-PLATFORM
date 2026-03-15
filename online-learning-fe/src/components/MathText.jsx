@@ -2,34 +2,59 @@ import React from 'react';
 import 'katex/dist/katex.min.css'; // Import CSS bắt buộc
 import katex from 'katex';
 
-const MathText = ({ text }) => {
+const MathText = ({ text, className, style }) => {
     if (!text) return null;
 
-    // Hàm render: Tách chuỗi dựa trên dấu $
-    // Ví dụ: "Tìm $x$ biết $x^2=4$" -> ["Tìm ", "x", " biết ", "x^2=4"]
     const renderContent = () => {
-        // Regex để bắt nội dung trong $...$
-        const parts = text.split(/\$(.*?)\$/g);
+        const nodes = [];
+        const mathPattern = /\$\$([\s\S]+?)\$\$|\$([^$]+?)\$/g;
+        let lastIndex = 0;
+        let match;
 
-        return parts.map((part, index) => {
-            // Các phần tử ở vị trí lẻ (1, 3, 5...) chính là công thức toán
-            if (index % 2 === 1) {
+        while ((match = mathPattern.exec(text)) !== null) {
+            if (match.index > lastIndex) {
+                nodes.push({ type: 'text', value: text.slice(lastIndex, match.index) });
+            }
+
+            nodes.push({
+                type: 'math',
+                value: match[1] || match[2],
+                displayMode: Boolean(match[1])
+            });
+
+            lastIndex = mathPattern.lastIndex;
+        }
+
+        if (lastIndex < text.length) {
+            nodes.push({ type: 'text', value: text.slice(lastIndex) });
+        }
+
+        if (!nodes.length) {
+            nodes.push({ type: 'text', value: text });
+        }
+
+        return nodes.map((node, index) => {
+            if (node.type === 'math') {
                 try {
-                    const html = katex.renderToString(part, {
+                    const html = katex.renderToString(node.value, {
                         throwOnError: false,
-                        displayMode: false // false = hiển thị cùng dòng (inline)
+                        displayMode: node.displayMode
                     });
                     return <span key={index} dangerouslySetInnerHTML={{ __html: html }} />;
                 } catch (e) {
-                    return <span key={index} className="text-danger">{part}</span>;
+                    return <span key={index} className="text-danger">{node.value}</span>;
                 }
             }
-            // Các phần tử chẵn là text bình thường
-            return <span key={index}>{part}</span>;
+
+            return <span key={index}>{node.value}</span>;
         });
     };
 
-    return <span>{renderContent()}</span>;
+    return (
+        <span className={className} style={{ whiteSpace: 'pre-wrap', ...style }}>
+            {renderContent()}
+        </span>
+    );
 };
 
 export default MathText;
