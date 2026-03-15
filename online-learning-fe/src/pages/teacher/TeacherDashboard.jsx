@@ -60,6 +60,12 @@ const TeacherDashboard = () => {
         finally { setUploading(false); }
     };
 
+    const handleRemoveCoverImage = () => {
+        setFormData(prev => ({ ...prev, imageUrl: '' }));
+        setUploadProgress(0);
+        toast.info("Đã xóa ảnh bìa đã chọn.");
+    };
+
     const handleOpenModal = (course = null) => {
         if (course) {
             setIsEditing(true);
@@ -418,6 +424,33 @@ const TeacherDashboard = () => {
                                         <input type="file" hidden accept="image/*" onChange={handleFileUpload} disabled={uploading}/>
                                     </label>
                                 </InputGroup>
+
+                                {formData.imageUrl && (
+                                    <div className="mb-2">
+                                        <div style={{borderRadius: '12px', overflow: 'hidden', border: '2px solid #e5e7eb', background: '#fff'}}>
+                                            <img
+                                                src={formData.imageUrl}
+                                                alt="Ảnh bìa xem trước"
+                                                style={{ width: '100%', height: '180px', objectFit: 'cover', display: 'block' }}
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display = 'none';
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="d-flex justify-content-end mt-2">
+                                            <Button
+                                                variant="outline-danger"
+                                                size="sm"
+                                                onClick={handleRemoveCoverImage}
+                                                disabled={uploading}
+                                                style={{borderRadius: '10px', borderWidth: '2px', fontWeight: '600'}}
+                                            >
+                                                <Trash className="me-1" size={14}/> Xóa ảnh đã chọn
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {uploading && (
                                     <div className="mt-2">
                                         <div className="d-flex justify-content-between mb-2">
