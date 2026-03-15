@@ -8,12 +8,9 @@ import com.swd.online_learning.entity.Enrollment;
 import com.swd.online_learning.entity.Role;
 import com.swd.online_learning.entity.User;
 import com.swd.online_learning.enums.RoleName;
-import com.swd.online_learning.repository.ClassRoomRepository;
-import com.swd.online_learning.repository.CourseRepository;
-import com.swd.online_learning.repository.EnrollmentRepository;
-import com.swd.online_learning.repository.RoleRepository;
-import com.swd.online_learning.repository.UserRepository;
+import com.swd.online_learning.repository.*;
 import com.swd.online_learning.service.AdminService;
+import com.swd.online_learning.service.TeacherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,6 +29,9 @@ public class AdminServiceImpl implements AdminService {
     private final ClassRoomRepository classRoomRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final PasswordEncoder passwordEncoder;
+
+    private final TeacherService teacherService;
+    private final SubmissionRepository submissionRepository;
 
     @Override
     public AdminDashboardStatResponse getDashboardStats() {
@@ -121,7 +121,27 @@ public class AdminServiceImpl implements AdminService {
             throw new RuntimeException("Không được phép xóa tài khoản Admin!");
         }
 
-        // Xóa User (Cascade sẽ lo phần dữ liệu liên quan nếu Entity đã set CascadeType.ALL)
+        // ==========================================
+        // DỌN DẸP DỮ LIỆU LIÊN QUAN TRƯỚC KHI XÓA
+        // ==========================================
+        if (user.getRole().getRoleName() == RoleName.TEACHER) {
+            // Nếu là Giáo viên: Tìm và xóa sạch tất cả khóa học do GV này tạo
+            List<Course> courses = courseRepository.findByInstructor_UserId(userId);
+            for (Course course : courses) {
+                // Gọi lại hàm xóa khóa học của TeacherService (Hàm này đã có sẵn logic xóa bài học, lớp học...)
+                teacherService.deleteCourse(course.getCourseId());
+            }
+        }
+        else if (user.getRole().getRoleName() == RoleName.STUDENT) {
+            // Nếu là Học sinh: Tìm và xóa sạch tất cả Bài nộp (Submissions) và Ghi danh (Enrollments)
+            List<Enrollment> enrollments = enrollmentRepository.findByStudent_UserId(userId);
+            for (Enrollment enrollment : enrollments) {
+                submissionRepository.deleteByEnrollment(enrollment); // Xóa bài đã nộp
+                enrollmentRepository.delete(enrollment); // Xóa tên khỏi danh sách lớp
+            }
+        }
+
+        // Sau khi đã dọn sạch sẽ "rác" liên quan, giờ mới tiến hành xóa Tài khoản
         userRepository.delete(user);
     }
 
