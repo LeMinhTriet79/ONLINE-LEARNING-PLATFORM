@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, InputGroup, Alert, Badge, Card, ProgressBar } from 'react-bootstrap';
 import { CloudArrowUp, FileEarmarkText, Trash, CheckCircle, XCircle, Eye, EyeSlash } from 'react-bootstrap-icons';
 import axiosClient from '../../api/axiosClient';
+import MathText from '../../components/MathText';
 import { toast } from 'react-toastify';
 
 const SubmitAssignment = ({ show, handleClose, assignment }) => {
@@ -117,9 +118,9 @@ const SubmitAssignment = ({ show, handleClose, assignment }) => {
                         <div className="me-3" style={{fontSize: '2rem'}}>📝</div>
                         <div className="flex-grow-1">
                             <h6 className="fw-bold mb-2" style={{color: '#d97706'}}>Đề bài tập:</h6>
-                            <p className="mb-0" style={{fontSize: '0.95rem', lineHeight: '1.6', color: '#4b5563'}}>
-                                {assignment?.instructions}
-                            </p>
+                            <div className="mb-0" style={{fontSize: '0.95rem', lineHeight: '1.6', color: '#4b5563'}}>
+                                <MathText text={assignment?.instructions} />
+                            </div>
                         </div>
                     </div>
                 </div>

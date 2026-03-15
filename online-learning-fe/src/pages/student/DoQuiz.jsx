@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Badge, InputGroup, Spinner } from 'react-bootstrap';
 import { CheckCircleFill, XCircleFill, ArrowRepeat, Robot, SendFill, XLg } from 'react-bootstrap-icons';
 import axiosClient from '../../api/axiosClient';
+import MathText from '../../components/MathText';
 import { toast } from 'react-toastify';
 
 const DoQuiz = ({ show, handleClose, quiz }) => {
@@ -14,29 +15,6 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
     const [aiQuery, setAiQuery] = useState(''); 
     const [aiResponse, setAiResponse] = useState(''); 
     const [isAiLoading, setIsAiLoading] = useState(false); 
-
-    // --- BỘ LỌC MA THUẬT: HIỂN THỊ TOÁN HỌC & MARKDOWN ---
-    const renderHTML = (text) => {
-        if (!text) return { __html: "" };
-        
-        // 1. Chống XSS và bảo vệ các dấu < > trong công thức
-        let formatted = text.replace(/[&<>'"]/g, tag => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-        }[tag] || tag));
-
-        // 2. Dịch ký hiệu Toán/Lý cơ bản & Markdown của AI
-        formatted = formatted
-            .replace(/\$\\Omega\$/g, 'Ω')
-            .replace(/\\Omega/g, 'Ω')
-            .replace(/\$\\alpha\$/g, 'α')
-            .replace(/\$\\beta\$/g, 'β')
-            .replace(/\$\\pi\$/g, 'π')
-            .replace(/\$(.*?)\$/g, '$1') // Lọc sạch các dấu $ thừa
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // In đậm (Markdown)
-            .replace(/\n/g, '<br/>'); // Xuống dòng
-
-        return { __html: formatted };
-    };
 
     useEffect(() => {
         if (show && quiz) {
@@ -184,9 +162,9 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
                     <div key={q.questionId} className="mb-4 p-4 bg-white position-relative"
                         style={{ borderRadius: '16px', border: '2px solid #d1fae5', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)' }}>
                         
-                        {/* HIỂN THỊ CÂU HỎI QUA BỘ LỌC renderHTML */}
+                        {/* HIỂN THỊ CÂU HỎI QUA MathText để render LaTeX đúng */}
                         <h6 className="fw-bold mb-3 pb-2" style={{color: '#059669', fontSize: '1.1rem', borderBottom: '2px solid #f0fdf4'}}>
-                            ❓ Câu {index + 1}: <span dangerouslySetInnerHTML={renderHTML(q.content)} />
+                            ❓ Câu {index + 1}: <MathText text={q.content} />
                         </h6>
 
                         <div className="mt-3">
@@ -210,8 +188,7 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
                                     >
                                         <Form.Check 
                                             type="radio"
-                                            // HIỂN THỊ ĐÁP ÁN QUA BỘ LỌC renderHTML
-                                            label={<span dangerouslySetInnerHTML={renderHTML(opt.content)} />}
+                                            label={<MathText text={opt.content} />}
                                             name={`question-${q.questionId}`}
                                             checked={viewMode === 'DOING' ? answers[q.questionId] == opt.optionId : !!isSelected}
                                             disabled={viewMode === 'REVIEW'} 
@@ -251,10 +228,10 @@ const DoQuiz = ({ show, handleClose, quiz }) => {
                                             <h6 className="m-0 fw-bold" style={{ color: '#4f46e5' }}>Gia sư Gemini</h6>
                                         </div>
                                         
-                                        {/* HIỂN THỊ KẾT QUẢ AI QUA BỘ LỌC renderHTML */}
+                                        {/* AI response có thể chứa công thức LaTeX */}
                                         {aiResponse && (
                                             <div className="mb-3 p-3 bg-white" style={{ borderRadius: '10px', fontSize: '0.95rem', borderLeft: '4px solid #6366f1', color: '#334155', lineHeight: '1.6' }}>
-                                                <div dangerouslySetInnerHTML={renderHTML(aiResponse)} />
+                                                <MathText text={aiResponse} />
                                             </div>
                                         )}
 
