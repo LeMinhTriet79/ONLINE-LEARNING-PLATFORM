@@ -9,6 +9,6 @@ import java.util.Optional;
 public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findByInstructor_Username(String username); // Sửa lại đúng chuẩn JPA (findByInstructor_Username hoặc findByInstructorUsername)
 
-    // --- THÊM HÀM NÀY ---
-    Optional<Course> findByEnrollmentKey(String enrollmentKey);
+    List<Course> findByInstructor_UserId(Long instructorId);
+    //Optional<Course> findByEnrollmentKey(String enrollmentKey);
 }

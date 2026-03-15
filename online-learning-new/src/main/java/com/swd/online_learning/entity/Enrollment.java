@@ -15,9 +15,10 @@ public class Enrollment {
     @JoinColumn(name = "user_id", nullable = false)
     private User student;
 
+    // TRONG Enrollment.java - Sửa lại như sau:
     @ManyToOne
-    @JoinColumn(name = "course_id", nullable = false)
-    private Course course;
+    @JoinColumn(name = "class_id", nullable = false)
+    private ClassRoom classRoom; // Sinh viên giờ được ghi danh thẳng vào Lớp (10A1), từ Lớp sẽ suy ra được Môn (Toán 10).
 
     @Column(nullable = false)
     private Float progressPercent = 0.0f;

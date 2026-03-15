@@ -15,8 +15,7 @@ const TeacherDashboard = () => {
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [currentId, setCurrentId] = useState(null);
-    // ĐÃ XÓA enrollmentKey khỏi state mặc định
-    const [formData, setFormData] = useState({ title: '', description: '', imageUrl: '' });
+    const [formData, setFormData] = useState({ title: '', description: '', imageUrl: '', enrollmentKey: '' });
 
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
@@ -67,22 +66,21 @@ const TeacherDashboard = () => {
             setFormData({ 
                 title: course.title, 
                 description: course.description || '', 
-                imageUrl: course.imageUrl || ''
-                // Đã xóa lấy enrollmentKey từ course
+                imageUrl: course.imageUrl || '',
+                enrollmentKey: course.enrollmentKey || ''
             });
         } else {
             setIsEditing(false);
             setCurrentId(null);
-            // Đã xóa tạo enrollmentKey ngẫu nhiên
-            setFormData({ title: '', description: '', imageUrl: '' });
+            const randomKey = "COURSE_" + Math.floor(1000 + Math.random() * 9000);
+            setFormData({ title: '', description: '', imageUrl: '', enrollmentKey: randomKey });
         }
         setShowModal(true);
     };
 
     const handleSubmit = async () => {
-        // Đã xóa điều kiện check enrollmentKey
-        if (!formData.title) { 
-            toast.warning("Vui lòng nhập tên môn học!"); return; 
+        if (!formData.title || !formData.enrollmentKey) { 
+            toast.warning("Vui lòng nhập tên và mã tham gia!"); return; 
         }
         try {
             if (isEditing) {
@@ -90,7 +88,7 @@ const TeacherDashboard = () => {
                 toast.success("Cập nhật thành công!");
             } else {
                 await axiosClient.post('/teacher/courses', formData);
-                toast.success("Tạo môn học thành công!");
+                toast.success("Tạo khóa học thành công!");
             }
             setShowModal(false);
             fetchCourses();
@@ -98,10 +96,10 @@ const TeacherDashboard = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("Xóa môn học sẽ mất hết dữ liệu! Bạn chắc chứ?")) {
+        if (window.confirm("Xóa khóa học sẽ mất hết dữ liệu! Bạn chắc chứ?")) {
             try {
                 await axiosClient.delete(`/teacher/courses/${id}`);
-                toast.success("Đã xóa môn học!");
+                toast.success("Đã xóa khóa học!");
                 fetchCourses();
             } catch (error) { toast.error("Lỗi xóa!"); }
         }
@@ -219,7 +217,7 @@ const TeacherDashboard = () => {
                     </div>
                 </div>
 
-                {/* Action Bar - Tạo Môn Học */}
+                {/* Action Bar - Tạo Khóa Học */}
                 <div className="mb-4 d-flex justify-content-between align-items-center">
                     <div>
                         <h5 className="fw-bold mb-1" style={{color: '#1f2937'}}>
@@ -247,7 +245,7 @@ const TeacherDashboard = () => {
                             e.currentTarget.style.transform = 'translateY(0)';
                             e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
                         }}>
-                        <PlusCircle className="me-2" size={18}/> Tạo Môn Học Mới
+                        <PlusCircle className="me-2" size={18}/> Tạo Khóa Học Mới
                     </Button>
                 </div>
 
@@ -262,7 +260,7 @@ const TeacherDashboard = () => {
                 {!loading && courses.length === 0 ? (
                     <div className="text-center p-5 bg-white" style={{borderRadius: '20px', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)'}}>
                         <div style={{fontSize: '4rem', marginBottom: '16px'}}>📚</div>
-                        <h4 style={{color: '#6b7280', marginBottom: '16px'}}>Chưa có môn học nào</h4>
+                        <h4 style={{color: '#6b7280', marginBottom: '16px'}}>Chưa có khóa học nào</h4>
                         <Button 
                             className="fw-semibold text-white border-0"
                             onClick={() => handleOpenModal()}
@@ -272,7 +270,7 @@ const TeacherDashboard = () => {
                                 padding: '12px 32px',
                                 boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                             }}>
-                            <PlusCircle className="me-2" size={18}/> Tạo môn học đầu tiên
+                            <PlusCircle className="me-2" size={18}/> Tạo khóa học đầu tiên
                         </Button>
                     </div>
                 ) : (
@@ -313,9 +311,21 @@ const TeacherDashboard = () => {
                                         <Card.Title className="fw-bold text-truncate mb-3" style={{color: '#1f2937', fontSize: '1.2rem'}}>
                                             {course.title}
                                         </Card.Title>
-                                        
-                                        {/* Đã xóa Badge hiển thị EnrollmentKey ở đây, vì Key giờ nằm ở lớp học (CourseDetail) */}
-                                        
+                                        <div className="mb-3">
+                                            <Badge 
+                                                className="p-2"
+                                                style={{
+                                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: '600',
+                                                    borderRadius: '8px'
+                                                }}
+                                                onClick={() => {navigator.clipboard.writeText(course.enrollmentKey); toast.success("Đã copy mã!");}}
+                                                title="Click để copy mã">
+                                                <Key className="me-1" size={14}/> Mã: {course.enrollmentKey}
+                                            </Badge>
+                                        </div>
                                         <Card.Text className="text-muted flex-grow-1 mb-3" style={{fontSize: '0.9rem', lineHeight: '1.5'}}>
                                             {course.description || "Chưa có mô tả."}
                                         </Card.Text>
@@ -329,7 +339,7 @@ const TeacherDashboard = () => {
                                                     padding: '12px',
                                                     boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                                                 }}>
-                                                📝 Vào Soạn Bài / Quản lý lớp
+                                                📝 Vào Soạn Bài
                                             </Button>
                                             <div className="d-flex gap-2">
                                                 <Button 
@@ -356,7 +366,7 @@ const TeacherDashboard = () => {
                     </Row>
                 )}
 
-                {/* Modal Tạo/Sửa Môn Học */}
+                {/* Modal Tạo/Sửa Khóa Học */}
                 <Modal show={showModal} onHide={() => setShowModal(false)} centered>
                     <Modal.Header 
                         closeButton 
@@ -368,13 +378,13 @@ const TeacherDashboard = () => {
                             padding: '24px'
                         }}>
                         <Modal.Title className="fw-bold" style={{fontSize: '1.3rem'}}>
-                            {isEditing ? "✏️ Cập Nhật Môn Học" : "➕ Tạo Môn Học Mới"}
+                            {isEditing ? "✏️ Cập Nhật Khóa Học" : "➕ Tạo Khóa Học Mới"}
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body style={{padding: '32px', background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)'}}>
                         <Form>
                             <Form.Group className="mb-4">
-                                <Form.Label className="fw-bold mb-2" style={{color: '#667eea'}}>📝 Tên môn học</Form.Label>
+                                <Form.Label className="fw-bold mb-2" style={{color: '#667eea'}}>📝 Tên khóa học</Form.Label>
                                 <Form.Control 
                                     value={formData.title} 
                                     onChange={e => setFormData({...formData, title: e.target.value})} 
@@ -387,9 +397,23 @@ const TeacherDashboard = () => {
                                     }}
                                 />
                             </Form.Group>
-                            
-                            {/* ĐÃ XÓA Ô NHẬP MÃ THAM GIA Ở ĐÂY VÌ NÓ THUỘC VỀ LỚP HỌC */}
-
+                            <Form.Group className="mb-4">
+                                <Form.Label className="fw-bold mb-2" style={{color: '#667eea'}}>🔑 Mã tham gia (Key)</Form.Label>
+                                <Form.Control 
+                                    value={formData.enrollmentKey} 
+                                    onChange={e => setFormData({...formData, enrollmentKey: e.target.value.toUpperCase()})}
+                                    placeholder="VD: JAVA_K18" 
+                                    className="fw-bold"
+                                    size="lg"
+                                    style={{
+                                        borderRadius: '12px',
+                                        border: '2px solid #667eea',
+                                        padding: '12px 16px',
+                                        color: '#667eea',
+                                        letterSpacing: '1px'
+                                    }}
+                                />
+                            </Form.Group>
                             <Form.Group className="mb-4">
                                 <Form.Label className="fw-bold mb-2" style={{color: '#667eea'}}>🖼️ Ảnh bìa</Form.Label>
                                 <InputGroup size="lg" className="mb-2">
@@ -443,7 +467,7 @@ const TeacherDashboard = () => {
                                     rows={4} 
                                     value={formData.description} 
                                     onChange={e => setFormData({...formData, description: e.target.value})}
-                                    placeholder="Nhập mô tả ngắn gọn về môn học..."
+                                    placeholder="Nhập mô tả ngắn gọn về khóa học..."
                                     style={{
                                         borderRadius: '12px',
                                         border: '2px solid #e5e7eb',

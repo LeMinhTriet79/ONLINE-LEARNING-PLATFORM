@@ -21,8 +21,7 @@ public class Course {
 
     private String imageUrl;
 
-    @Column(unique = true) // Mã này không được trùng nhau giữa các khóa học
-    private String enrollmentKey;
+
 
     @ManyToOne
     @JoinColumn(name = "instructor_id", nullable = false)
@@ -32,4 +31,8 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("course") // Cắt vòng lặp: Lấy Course -> Lấy Chapter -> NGỪNG (Không lấy ngược lại Course nữa)
     private List<Chapter> chapters;
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("course")
+    private List<ClassRoom> classes;
 }
